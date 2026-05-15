@@ -1,0 +1,67 @@
+name: ifree_app
+description: Plataforma premium de conexão entre Freelancers e Restaurantes
+publish_to: 'none'
+version: 2.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  google_sign_in: ^6.2.1
+
+  # Navegação
+  go_router: ^14.2.7
+
+  # UI / Animações
+  flutter_animate: ^4.5.0
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+  flutter_rating_bar: ^4.0.1
+
+  # Localização / GPS
+  geolocator: ^13.0.1
+  geocoding: ^3.0.0
+
+  # Estado
+  flutter_riverpod: ^2.6.1
+  riverpod: ^2.6.1
+  state_notifier: ^1.0.0
+
+  # Utilitários
+  shared_preferences: ^2.3.2
+  intl: ^0.19.0
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+
+        - asset: assets/fonts/Poppins-ExtraBold.ttf
+          weight: 800

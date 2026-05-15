@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "313330203623",
+    "project_id": "ifree-ab709",
+    "storage_bucket": "ifree-ab709.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:313330203623:android:13c45e8ed434fbf03d1b42",
+        "android_client_info": {
+          "package_name": "com.example.ifree_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "313330203623-d92ek8dbuj1rk7uiqutq22ep2fu9abmg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtYmiqxl2y-5bSCAHHrINMyr5LLcQzDnY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "313330203623-d92ek8dbuj1rk7uiqutq22ep2fu9abmg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "313330203623-avsmp4ma5rcp5ks9sq1rprt76ron9ula.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ifreeApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    CORREÇÃO DO ERRO:
+    "ClientID not set. Either set it on a <meta name='google-signin-client_id'>
+    content='CLIENT_ID' /> tag, or pass clientId when initializing GoogleSignIn"
+
+    ➜ Substitua SEU_CLIENT_ID.apps.googleusercontent.com pelo OAuth Client ID
+       criado no Google Cloud Console para o projeto Firebase.
+       Caminho: console.cloud.google.com → APIs & Services → Credentials → OAuth 2.0 Client IDs
+  -->
+  <meta name="google-signin-client_id" content="746746697367-to1tgo30vddgfoc7k9tt84so69jkjpfr.apps.googleusercontent.com">
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="iFree - Conectando freelancers a restaurantes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="iFree">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>iFree</title>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    var serviceWorkerVersion = null;
+  </script>
+  <script src="flutter.js" defer></script>
+</head>
+<body>
+  <script>
+    window.addEventListener('load', function(ev) {
+      // Download main.dart.js
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
+            appRunner.runApp();
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
