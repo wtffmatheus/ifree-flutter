@@ -17,9 +17,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _send() async {
     if (_ctrl.text.trim().isEmpty || !_ctrl.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Digite um e-mail válido')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Digite um e-mail válido')));
       return;
     }
     setState(() => _loading = true);
@@ -50,8 +50,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.mark_email_read_outlined,
-                      size: 72, color: AppColors.success),
+                  const Icon(
+                    Icons.mark_email_read_outlined,
+                    size: 72,
+                    color: AppColors.success,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'E-mail enviado!',
@@ -100,7 +103,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text('Enviar link de recuperação'),
                   ),

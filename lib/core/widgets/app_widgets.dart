@@ -2,24 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../theme/app_colors.dart';
 
-// ── StatusBadge ───────────────────────────────────────────────────────────────
+// â”€â”€ StatusBadge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class StatusBadge extends StatelessWidget {
   final String status;
   const StatusBadge({super.key, required this.status});
 
   Color get _color {
     switch (status) {
-      case 'aprovado':  return AppColors.aprovado;
-      case 'concluido': return AppColors.concluido;
-      default:          return AppColors.analise;
+      case 'aprovado':
+        return AppColors.aprovado;
+      case 'concluido':
+        return AppColors.concluido;
+      default:
+        return AppColors.analise;
     }
   }
 
   String get _label {
     switch (status) {
-      case 'aprovado':  return '✓ Aprovado';
-      case 'concluido': return '🏁 Concluído';
-      default:          return '⏳ Em Análise';
+      case 'aprovado':
+        return 'âœ“ Aprovado';
+      case 'concluido':
+        return 'ðŸ Concluído';
+      default:
+        return 'â³ Em Análise';
     }
   }
 
@@ -28,9 +34,9 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: _color.withOpacity(0.12),
+        color: _color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _color.withOpacity(0.3), width: 0.8),
+        border: Border.all(color: _color.withValues(alpha: 0.3), width: 0.8),
       ),
       child: Text(
         _label,
@@ -45,7 +51,7 @@ class StatusBadge extends StatelessWidget {
   }
 }
 
-// ── IFreeAvatar ────────────────────────────────────────────────────────────────
+// â”€â”€ IFreeAvatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class IFreeAvatar extends StatelessWidget {
   final String name;
   final double size;
@@ -91,12 +97,16 @@ class IFreeAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [primary, primary.withOpacity(0.6)],
+          colors: [primary, primary.withValues(alpha: 0.6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
-          BoxShadow(color: primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: primary.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Center(
@@ -114,7 +124,7 @@ class IFreeAvatar extends StatelessWidget {
   }
 }
 
-// ── ShimmerCard ─────────────────────────────────────────────────────────────────
+// â”€â”€ ShimmerCard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class ShimmerCard extends StatelessWidget {
   const ShimmerCard({super.key});
 
@@ -125,7 +135,9 @@ class ShimmerCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Shimmer.fromColors(
         baseColor: isDark ? const Color(0xFF1C1C26) : const Color(0xFFE8E8EE),
-        highlightColor: isDark ? const Color(0xFF2A2A38) : const Color(0xFFF5F5FA),
+        highlightColor: isDark
+            ? const Color(0xFF2A2A38)
+            : const Color(0xFFF5F5FA),
         child: Container(
           height: 140,
           decoration: BoxDecoration(
@@ -138,7 +150,7 @@ class ShimmerCard extends StatelessWidget {
   }
 }
 
-// ── InfoChip ───────────────────────────────────────────────────────────────────
+// â”€â”€ InfoChip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -157,23 +169,31 @@ class InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.1),
+        color: c.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: c.withOpacity(0.2), width: 0.8),
+        border: Border.all(color: c.withValues(alpha: 0.2), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: c),
           const SizedBox(width: 5),
-          Text(label, style: TextStyle(color: c, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: 'Sora')),
+          Text(
+            label,
+            style: TextStyle(
+              color: c,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Sora',
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// ── StarRating ─────────────────────────────────────────────────────────────────
+// â”€â”€ StarRating â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class StarRating extends StatelessWidget {
   final double rating;
   final double size;
@@ -187,21 +207,34 @@ class StarRating extends StatelessWidget {
         if (i < rating.floor()) {
           return Icon(Icons.star_rounded, size: size, color: AppColors.gold);
         } else if (i < rating) {
-          return Icon(Icons.star_half_rounded, size: size, color: AppColors.gold);
+          return Icon(
+            Icons.star_half_rounded,
+            size: size,
+            color: AppColors.gold,
+          );
         }
-        return Icon(Icons.star_outline_rounded, size: size, color: AppColors.gold.withOpacity(0.3));
+        return Icon(
+          Icons.star_outline_rounded,
+          size: size,
+          color: AppColors.gold.withValues(alpha: 0.3),
+        );
       }),
     );
   }
 }
 
-// ── SectionHeader ─────────────────────────────────────────────────────────────
+// â”€â”€ SectionHeader â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class SectionHeader extends StatelessWidget {
   final String title;
   final String? action;
   final VoidCallback? onAction;
 
-  const SectionHeader({super.key, required this.title, this.action, this.onAction});
+  const SectionHeader({
+    super.key,
+    required this.title,
+    this.action,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,17 +245,14 @@ class SectionHeader extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.titleMedium),
           const Spacer(),
           if (action != null)
-            TextButton(
-              onPressed: onAction,
-              child: Text(action!),
-            ),
+            TextButton(onPressed: onAction, child: Text(action!)),
         ],
       ),
     );
   }
 }
 
-// ── EmptyState ─────────────────────────────────────────────────────────────────
+// â”€â”€ EmptyState â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -250,16 +280,32 @@ class EmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 48, color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+              child: Icon(
+                icon,
+                size: 48,
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.5),
+              ),
             ),
             const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
-              Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+              Text(
+                subtitle!,
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 24),

@@ -1,22 +1,25 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-// google_sign_in v6
 class AuthRepository {
-  final _auth = FirebaseAuth.instance;
-  final _db = FirebaseFirestore.instance;
-  final _googleSignIn = GoogleSignIn();
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _db;
+  final GoogleSignIn _googleSignIn;
+
+  AuthRepository({
+    FirebaseAuth? auth,
+    FirebaseFirestore? db,
+    GoogleSignIn? googleSignIn,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _db = db ?? FirebaseFirestore.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   User? get currentUser => _auth.currentUser;
 
-  // ── Email / Senha ─────────────────────────────────────────────────────────
-  Future<UserCredential> signInWithEmail(
-    String email,
-    String password,
-  ) {
+  Future<UserCredential> signInWithEmail(String email, String password) {
     return _auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
@@ -29,75 +32,109 @@ class AuthRepository {
     required String password,
     required String role,
   }) async {
-    final cred = await _auth.createUserWithEmailAndPassword(
+    final normalizedRole = _normalizeRole(role);
+
+    final credential = await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
 
-    await _db.collection('users').doc(cred.user!.uid).set({
+    final user = credential.user;
+
+    if (user == null) {
+      throw Exception('Não foi possível criar o usuário.');
+    }
+
+    await user.updateDisplayName(name.trim());
+
+    await _db.collection('users').doc(user.uid).set({
+      'uid': user.uid,
       'name': name.trim(),
       'email': email.trim(),
-      'role': role,
+      'role': normalizedRole,
       'bio': '',
       'skills': <String>[],
-      'photoUrl': null,
+      'phone': '',
+      'city': '',
+      'photoUrl': user.photoURL,
       'profileComplete': false,
       'avaliacaoMedia': 0.0,
       'totalJobs': 0,
       'createdAt': FieldValue.serverTimestamp(),
-    });
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
-    return cred;
+    return credential;
   }
 
-  // ── Google Sign-In ────────────────────────────────────────────────────────
-  Future<UserCredential> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
+  Future<UserCredential> signInWithGoogle({
+    String defaultRole = 'freelancer',
+  }) async {
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
     if (googleUser == null) {
-      throw Exception('Login cancelado pelo usuário');
+      throw Exception('Login cancelado pelo usuário.');
     }
 
-    final googleAuth = await googleUser.authentication;
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
 
-    final credential = GoogleAuthProvider.credential(
+    final OAuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    final cred = await _auth.signInWithCredential(credential);
+    final UserCredential userCredential = await _auth.signInWithCredential(
+      credential,
+    );
 
-    // Cria perfil se for primeiro acesso
-    final doc = await _db.collection('users').doc(cred.user!.uid).get();
+    final user = userCredential.user;
 
-    if (!doc.exists) {
-      await _db.collection('users').doc(cred.user!.uid).set({
-        'name': cred.user!.displayName ?? '',
-        'email': cred.user!.email ?? '',
-        'role': 'freelancer',
+    if (user == null) {
+      throw Exception('Não foi possível autenticar com o Google.');
+    }
+
+    final userRef = _db.collection('users').doc(user.uid);
+    final userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      await userRef.set({
+        'uid': user.uid,
+        'name': user.displayName ?? '',
+        'email': user.email ?? '',
+        'role': _normalizeRole(defaultRole),
         'bio': '',
         'skills': <String>[],
-        'photoUrl': cred.user!.photoURL,
+        'phone': '',
+        'city': '',
+        'photoUrl': user.photoURL,
         'profileComplete': false,
         'avaliacaoMedia': 0.0,
         'totalJobs': 0,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } else {
+      await userRef.set({
+        'email': user.email ?? userDoc.data()?['email'] ?? '',
+        'photoUrl': user.photoURL ?? userDoc.data()?['photoUrl'],
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     }
 
-    return cred;
+    return userCredential;
   }
 
-  // ── Reset de senha ────────────────────────────────────────────────────────
   Future<void> sendPasswordResetEmail(String email) {
-    return _auth.sendPasswordResetEmail(
-      email: email.trim(),
-    );
+    return _auth.sendPasswordResetEmail(email: email.trim());
   }
 
-  // ── Dados do usuário ──────────────────────────────────────────────────────
   Future<String?> getUserRole(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
+
+    if (!doc.exists) {
+      return null;
+    }
 
     return doc.data()?['role'] as String?;
   }
@@ -105,22 +142,49 @@ class AuthRepository {
   Future<Map<String, dynamic>?> getUserData(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
 
+    if (!doc.exists) {
+      return null;
+    }
+
     return doc.data();
   }
 
-  Future<void> updateUserData(
-    String uid,
-    Map<String, dynamic> data,
-  ) {
-    return _db.collection('users').doc(uid).update(data);
+  Future<void> updateUserData(String uid, Map<String, dynamic> data) {
+    return _db.collection('users').doc(uid).set({
+      ...data,
+      'uid': uid,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────────
+  Future<void> createOrUpdateUserData(String uid, Map<String, dynamic> data) {
+    return _db.collection('users').doc(uid).set({
+      ...data,
+      'uid': uid,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
-    } catch (_) {}
+    } catch (_) {
+      // Ignora erro caso o usuário não tenha logado com Google.
+    }
 
     await _auth.signOut();
+  }
+
+  String _normalizeRole(String role) {
+    final value = role.trim().toLowerCase();
+
+    if (value == 'empresa' ||
+        value == 'restaurante' ||
+        value == 'restaurant' ||
+        value == 'company') {
+      return 'company';
+    }
+
+    return 'freelancer';
   }
 }

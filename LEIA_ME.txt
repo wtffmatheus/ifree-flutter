@@ -1,0 +1,25 @@
+Pacote de correção: perfil + tema + seed demo
+
+Substitua os arquivos mantendo estes caminhos:
+
+lib/core/providers/theme_provider.dart
+lib/main.dart
+lib/features/auth/data/auth_repository.dart
+lib/core/data/seed_data.dart
+lib/features/freelancer/presentation/profile_freelancer_page.dart
+
+O que muda:
+- Perfil do freelancer abre em modo visualização, não edição direta.
+- Botão para editar perfil.
+- Campo URL da foto de perfil.
+- Toggle de modo escuro/claro dentro do perfil.
+- Correção do erro ao salvar perfil: updateUserData agora usa set(..., merge: true).
+- Seed v2 com vagas exemplo e empresas demo.
+
+Observação:
+Para aceitar candidatura a partir de outro perfil de verdade, o fluxo correto é:
+1. Criar uma conta empresa.
+2. Criar uma vaga pela área da empresa.
+3. Entrar em uma conta freelancer.
+4. Candidatar-se à vaga.
+5. Voltar na conta empresa e aprovar/recusar em Candidatos.

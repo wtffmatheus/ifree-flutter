@@ -1,81 +1,186 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../features/admin/presentation/admin_dashboard_page.dart';
 import '../../features/auth/presentation/auth_page.dart';
-import '../../features/auth/presentation/forgot_password_screen.dart';
+import '../../features/chat/presentation/chat_page.dart';
 import '../../features/freelancer/presentation/freelancer_dashboard.dart';
 import '../../features/freelancer/presentation/job_search_screen.dart';
 import '../../features/freelancer/presentation/my_jobs_page.dart';
 import '../../features/freelancer/presentation/profile_freelancer_page.dart';
+import '../../features/notifications/presentation/notifications_page.dart';
+import '../../features/restaurant/presentation/candidates_screen.dart';
 import '../../features/restaurant/presentation/company_dashboard.dart';
 import '../../features/restaurant/presentation/create_vacancy_screen.dart';
-import '../../features/restaurant/presentation/candidates_screen.dart';
 import '../../features/restaurant/presentation/profile_restaurant_page.dart';
 
-final appRouter = GoRouter(
-  initialLocation: '/auth',
-  redirect: (context, state) async {
+final GoRouter appRouter = GoRouter(
+  initialLocation: '/',
+  debugLogDiagnostics: true,
+  redirect: (context, state) {
     final user = FirebaseAuth.instance.currentUser;
-    final goingToAuth = state.matchedLocation == '/auth' ||
-        state.matchedLocation == '/forgot-password';
-    if (user == null && !goingToAuth) return '/auth';
-    if (user != null && state.matchedLocation == '/auth') return '/freelancer';
+    final location = state.matchedLocation;
+
+    final isAuthRoute = location == '/login' || location == '/auth';
+
+    if (user == null && !isAuthRoute) {
+      return '/login';
+    }
+
+    if (user != null && (location == '/' || isAuthRoute)) {
+      return '/freelancer';
+    }
+
     return null;
   },
+  errorBuilder: (context, state) {
+    return _NotFoundPage(
+      message: state.error?.toString() ?? 'Rota não encontrada.',
+    );
+  },
   routes: [
-    GoRoute(path: '/auth',           builder: (_, __) => const AuthPage()),
-    GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
+    GoRoute(
+      path: '/',
+      redirect: (context, state) {
+        final user = FirebaseAuth.instance.currentUser;
 
-    // ── Freelancer Shell ────────────────────────────────────────────────────
-    ShellRoute(
-      builder: (context, state, child) => _FreelancerShell(child: child),
-      routes: [
-        GoRoute(path: '/freelancer',            builder: (_, __) => const FreelancerDashboard()),
-        GoRoute(path: '/freelancer/search',     builder: (_, __) => const JobSearchScreen()),
-        GoRoute(path: '/freelancer/my-jobs',    builder: (_, __) => const MyJobsPage()),
-        GoRoute(path: '/freelancer/profile',    builder: (_, __) => const ProfileFreelancerPage()),
-      ],
+        if (user == null) {
+          return '/login';
+        }
+
+        return '/freelancer';
+      },
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const AuthPage(),
+    ),
+    GoRoute(
+      path: '/auth',
+      builder: (context, state) => const AuthPage(),
     ),
 
-    // ── Company Shell ───────────────────────────────────────────────────────
-    ShellRoute(
-      builder: (context, state, child) => _CompanyShell(child: child),
-      routes: [
-        GoRoute(path: '/company',                     builder: (_, __) => const CompanyDashboard()),
-        GoRoute(path: '/company/create-vacancy',      builder: (_, __) => const CreateVacancyScreen()),
-        GoRoute(path: '/company/candidates/:vagaId',  builder: (_, state) => CandidatesScreen(vagaId: state.pathParameters['vagaId']!)),
-        GoRoute(path: '/company/profile',             builder: (_, __) => const ProfileRestaurantPage()),
-      ],
+    GoRoute(
+      path: '/freelancer',
+      builder: (context, state) => const _FreelancerShell(
+        selectedIndex: 0,
+        child: FreelancerDashboard(),
+      ),
+    ),
+    GoRoute(
+      path: '/freelancer/search',
+      builder: (context, state) => const _FreelancerShell(
+        selectedIndex: 1,
+        child: JobSearchScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/freelancer/my-jobs',
+      builder: (context, state) => const _FreelancerShell(
+        selectedIndex: 2,
+        child: MyJobsPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/freelancer/profile',
+      builder: (context, state) => const _FreelancerShell(
+        selectedIndex: 3,
+        child: ProfileFreelancerPage(),
+      ),
+    ),
+
+    GoRoute(
+      path: '/company',
+      builder: (context, state) => const _CompanyShell(
+        selectedIndex: 0,
+        child: CompanyDashboard(),
+      ),
+    ),
+    GoRoute(
+      path: '/company/dashboard',
+      builder: (context, state) => const _CompanyShell(
+        selectedIndex: 0,
+        child: CompanyDashboard(),
+      ),
+    ),
+    GoRoute(
+      path: '/company/create-vacancy',
+      builder: (context, state) => const CreateVacancyScreen(),
+    ),
+    GoRoute(
+      path: '/company/profile',
+      builder: (context, state) => const _CompanyShell(
+        selectedIndex: 1,
+        child: ProfileRestaurantPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/company/candidates/:vagaId',
+      builder: (context, state) {
+        final vagaId = state.pathParameters['vagaId'] ?? '';
+
+        return CandidatesScreen(vagaId: vagaId);
+      },
+    ),
+
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsPage(),
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminDashboardPage(),
+    ),
+    GoRoute(
+      path: '/chat',
+      builder: (context, state) {
+        final conversationId =
+            state.uri.queryParameters['conversationId'] ?? '';
+        final title = state.uri.queryParameters['title'] ?? 'Chat';
+
+        return ChatPage(
+          conversationId: conversationId,
+          title: title,
+        );
+      },
     ),
   ],
 );
 
-// ── Freelancer Bottom Nav ────────────────────────────────────────────────────
 class _FreelancerShell extends StatelessWidget {
+  final int selectedIndex;
   final Widget child;
-  const _FreelancerShell({required this.child});
+
+  const _FreelancerShell({
+    required this.selectedIndex,
+    required this.child,
+  });
+
+  void _goToTab(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/freelancer');
+        break;
+      case 1:
+        context.go('/freelancer/search');
+        break;
+      case 2:
+        context.go('/freelancer/my-jobs');
+        break;
+      case 3:
+        context.go('/freelancer/profile');
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    int index = 0;
-    if (location.contains('search'))  index = 1;
-    if (location.contains('my-jobs')) index = 2;
-    if (location.contains('profile')) index = 3;
-
     return Scaffold(
       body: child,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) {
-          const routes = [
-            '/freelancer',
-            '/freelancer/search',
-            '/freelancer/my-jobs',
-            '/freelancer/profile',
-          ];
-          context.go(routes[i]);
-        },
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) => _goToTab(context, index),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -103,40 +208,38 @@ class _FreelancerShell extends StatelessWidget {
   }
 }
 
-// ── Company Bottom Nav ───────────────────────────────────────────────────────
 class _CompanyShell extends StatelessWidget {
+  final int selectedIndex;
   final Widget child;
-  const _CompanyShell({required this.child});
+
+  const _CompanyShell({
+    required this.selectedIndex,
+    required this.child,
+  });
+
+  void _goToTab(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/company');
+        break;
+      case 1:
+        context.go('/company/profile');
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    int index = 0;
-    if (location.contains('create-vacancy')) index = 1;
-    if (location.contains('profile'))        index = 2;
-
     return Scaffold(
       body: child,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) {
-          const routes = [
-            '/company',
-            '/company/create-vacancy',
-            '/company/profile',
-          ];
-          context.go(routes[i]);
-        },
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) => _goToTab(context, index),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard_rounded),
-            label: 'Vagas',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add_circle_outline_rounded),
-            selectedIcon: Icon(Icons.add_circle_rounded),
-            label: 'Postar',
+            label: 'Painel',
           ),
           NavigationDestination(
             icon: Icon(Icons.storefront_outlined),
@@ -144,6 +247,64 @@ class _CompanyShell extends StatelessWidget {
             label: 'Perfil',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NotFoundPage extends StatelessWidget {
+  final String message;
+
+  const _NotFoundPage({
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Página não encontrada'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 54,
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Page Not Found',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: () {
+                  if (user == null) {
+                    context.go('/login');
+                  } else {
+                    context.go('/freelancer');
+                  }
+                },
+                icon: const Icon(Icons.home_rounded),
+                label: const Text('Voltar para o início'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

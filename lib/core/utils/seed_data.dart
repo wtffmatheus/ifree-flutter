@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Popula o Firestore com vagas fictícias na região de Sorocaba.
-/// Execute uma única vez em modo debug: SeedData.run();
+/// Popula o Firestore com vagas fictÃƒÂ­cias na regiÃƒÂ£o de Sorocaba.
+/// Execute uma Ãƒºnica vez em modo debug: SeedData.run();
 class SeedData {
   static Future<void> run() async {
     final db = FirebaseFirestore.instance;
@@ -9,14 +9,14 @@ class SeedData {
     const vagas = [
       {
         'titulo': 'Bartender para Evento Corporativo',
-        'empresa': 'Espaço Vila Nova',
+        'empresa': 'EspaÃƒÂ§o Vila Nova',
         'local': 'Vila Nova, Sorocaba',
         'bairro': 'Vila Nova',
         'valor': '280',
         'descricao':
-            'Evento corporativo de grande porte. Experiência com coquetéis clássicos e flair bartending. Uniforme fornecido.',
+            'Evento corporativo de grande porte. ExperiÃƒªncia com coquetÃƒÂ©is clÃƒÂ¡ssicos e flair bartending. Uniforme fornecido.',
         'data': '14/05/2026',
-        'turno': '19h – 01h',
+        'turno': '19h ââ‚¬“ 01h',
         'tipo': 'Bartender',
         'lat': -23.4950,
         'lng': -47.4480,
@@ -30,9 +30,9 @@ class SeedData {
         'bairro': 'Centro',
         'valor': '190',
         'descricao':
-            'Restaurante fino no centro. Necessário experiência mínima de 1 ano e boa apresentação pessoal.',
+            'Restaurante fino no centro. NecessÃƒÂ¡rio experiÃƒªncia mÃƒÂ­nima de 1 ano e boa apresentaÃƒÂ§ÃƒÂ£o pessoal.',
         'data': '15/05/2026',
-        'turno': '11h – 15h e 19h – 23h',
+        'turno': '11h ââ‚¬“ 15h e 19h ââ‚¬“ 23h',
         'tipo': 'Garçom',
         'lat': -23.5020,
         'lng': -47.4560,
@@ -42,13 +42,13 @@ class SeedData {
       {
         'titulo': 'Chef de Cozinha para Casamento',
         'empresa': 'Buffet Recanto Real',
-        'local': 'Éden, Sorocaba',
-        'bairro': 'Éden',
+        'local': 'Ãƒâ€°den, Sorocaba',
+        'bairro': 'Ãƒâ€°den',
         'valor': '450',
         'descricao':
-            'Casamento com 200 convidados. Cardápio já definido. Procuramos chef experiente em banquetes.',
+            'Casamento com 200 convidados. CardÃƒÂ¡pio jÃƒÂ¡ definido. Procuramos chef experiente em banquetes.',
         'data': '17/05/2026',
-        'turno': '10h – 22h',
+        'turno': '10h ââ‚¬“ 22h',
         'tipo': 'Chef',
         'lat': -23.5200,
         'lng': -47.4200,
@@ -56,15 +56,15 @@ class SeedData {
         'companyId': 'seed_company_3',
       },
       {
-        'titulo': 'Auxiliar de Cozinha – Final de Semana',
+        'titulo': 'Auxiliar de Cozinha ââ‚¬“ Final de Semana',
         'empresa': 'Churrascaria Pampa',
         'local': 'Campolim, Sorocaba',
         'bairro': 'Campolim',
         'valor': '160',
         'descricao':
-            'Apoio na mise en place, cortes e limpeza. Sem exigência de experiência — treinamento fornecido.',
+            'Apoio na mise en place, cortes e limpeza. Sem exigÃƒªncia de experiÃƒªncia ââ‚¬” treinamento fornecido.',
         'data': '18/05/2026',
-        'turno': '10h – 17h',
+        'turno': '10h ââ‚¬“ 17h',
         'tipo': 'Auxiliar',
         'lat': -23.4780,
         'lng': -47.4350,
@@ -78,9 +78,9 @@ class SeedData {
         'bairro': 'Jardim Vera Cruz',
         'valor': '350',
         'descricao':
-            'Jantar temático de vinhos italianos. Exige certificação WSET ou Sommelier Brasil.',
+            'Jantar temÃƒÂ¡tico de vinhos italianos. Exige certificaÃƒÂ§ÃƒÂ£o WSET ou Sommelier Brasil.',
         'data': '16/05/2026',
-        'turno': '18h – 00h',
+        'turno': '18h ââ‚¬“ 00h',
         'tipo': 'Sommelier',
         'lat': -23.5100,
         'lng': -47.4700,
@@ -88,15 +88,15 @@ class SeedData {
         'companyId': 'seed_company_5',
       },
       {
-        'titulo': 'Barista para Café Boutique',
-        'empresa': 'Grão & Arte Café',
+        'titulo': 'Barista para CafÃƒÂ© Boutique',
+        'empresa': 'GrÃƒÂ£o & Arte CafÃƒÂ©',
         'local': 'Aparecidinha, Sorocaba',
         'bairro': 'Aparecidinha',
         'valor': '140',
         'descricao':
-            'Café especial de alto padrão. Sábado e domingo 7h-14h. Experiência com café coado e espresso.',
+            'CafÃƒÂ© especial de alto padrÃƒÂ£o. SÃƒÂ¡bado e domingo 7h-14h. ExperiÃƒªncia com cafÃƒÂ© coado e espresso.',
         'data': '17/05/2026',
-        'turno': '07h – 14h',
+        'turno': '07h ââ‚¬“ 14h',
         'tipo': 'Barista',
         'lat': -23.4900,
         'lng': -47.4600,
@@ -110,9 +110,9 @@ class SeedData {
         'bairro': 'Wanel Ville',
         'valor': '180',
         'descricao':
-            'Recepção e alocação de mesas, gestão de reservas. Inglês básico desejável.',
+            'RecepÃƒÂ§ÃƒÂ£o e alocaÃƒÂ§ÃƒÂ£o de mesas, gestÃƒÂ£o de reservas. InglÃƒªs bÃƒÂ¡sico desejÃƒÂ¡vel.',
         'data': '19/05/2026',
-        'turno': '18h – 00h',
+        'turno': '18h ââ‚¬“ 00h',
         'tipo': 'Recepcionista',
         'lat': -23.5080,
         'lng': -47.4820,
@@ -120,15 +120,15 @@ class SeedData {
         'companyId': 'seed_company_7',
       },
       {
-        'titulo': 'Pizzaiolo para Restaurante Temático',
+        'titulo': 'Pizzaiolo para Restaurante TemÃƒÂ¡tico',
         'empresa': 'Forno di Roma',
         'local': 'Cerrado, Sorocaba',
         'bairro': 'Cerrado',
         'valor': '220',
         'descricao':
-            'Forno a lenha autêntico. Experiência com pizzas napolitanas. Turno único noturno.',
+            'Forno a lenha autÃƒªntico. ExperiÃƒªncia com pizzas napolitanas. Turno Ãƒºnico noturno.',
         'data': '20/05/2026',
-        'turno': '17h – 23h',
+        'turno': '17h ââ‚¬“ 23h',
         'tipo': 'Pizzaiolo',
         'lat': -23.5150,
         'lng': -47.4650,
@@ -140,15 +140,13 @@ class SeedData {
     final batch = db.batch();
     for (final vaga in vagas) {
       final ref = db.collection('vagas').doc();
-      batch.set(ref, {
-        ...vaga,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      batch.set(ref, {...vaga, 'createdAt': FieldValue.serverTimestamp()});
     }
     await batch.commit();
 
-    // Seed de avaliações fictícias para user.matheus169@gmail.com
-    final matheusUid = 'matheus169_uid'; // substitua pelo UID real após login
+    // Seed de avaliações fictÃƒÂ­cias para user.matheus169@gmail.com
+    const matheusUid =
+        'matheus169_uid'; // substitua pelo UID real apÃƒÂ³s login
     final avals = [
       {
         'autorNome': 'Buffet Recanto Real',
@@ -162,14 +160,14 @@ class SeedData {
         'autorNome': 'Trattoria del Sol',
         'nota': 5,
         'comentario':
-            'Um dos melhores garçons que já contratamos. Super recomendo!',
+            'Um dos melhores garÃƒÂ§ons que jÃƒÂ¡ contratamos. Super recomendo!',
         'tipo': 'Garçom',
         'data': Timestamp.fromDate(DateTime(2026, 3, 15)),
       },
       {
-        'autorNome': 'Espaço Vila Nova',
+        'autorNome': 'EspaÃƒÂ§o Vila Nova',
         'nota': 4,
-        'comentario': 'Ótimo serviço, clientes adoraram os drinks.',
+        'comentario': 'Ãƒ“timo serviÃƒÂ§o, clientes adoraram os drinks.',
         'tipo': 'Bartender',
         'data': Timestamp.fromDate(DateTime(2026, 2, 20)),
       },
@@ -182,16 +180,44 @@ class SeedData {
           .add(av);
     }
 
-    // Jobs fictícios para matheus169
+    // Jobs fictÃƒÂ­cios para matheus169
     final jobsBatch = db.batch();
     const jobsData = [
-      {'status': 'aprovado',   'titulo': 'Chef de Cozinha para Casamento',     'empresa': 'Buffet Recanto Real', 'local': 'Éden, Sorocaba',       'valor': '450', 'data': '17/05/2026'},
-      {'status': 'em_analise', 'titulo': 'Garçom para Restaurante Italiano',   'empresa': 'Trattoria del Sol',  'local': 'Centro, Sorocaba',      'valor': '190', 'data': '15/05/2026'},
-      {'status': 'concluido',  'titulo': 'Recepcionista para Rest. Gourmet',   'empresa': 'La Maison Sorocaba', 'local': 'Wanel Ville, Sorocaba', 'valor': '180', 'data': 'Abr/2026'},
-      {'status': 'concluido',  'titulo': 'Bartender para Evento Corporativo',  'empresa': 'Espaço Vila Nova',   'local': 'Vila Nova, Sorocaba',   'valor': '280', 'data': 'Mar/2026'},
+      {
+        'status': 'aprovado',
+        'titulo': 'Chef de Cozinha para Casamento',
+        'empresa': 'Buffet Recanto Real',
+        'local': 'Ãƒâ€°den, Sorocaba',
+        'valor': '450',
+        'data': '17/05/2026',
+      },
+      {
+        'status': 'em_analise',
+        'titulo': 'Garçom para Restaurante Italiano',
+        'empresa': 'Trattoria del Sol',
+        'local': 'Centro, Sorocaba',
+        'valor': '190',
+        'data': '15/05/2026',
+      },
+      {
+        'status': 'concluido',
+        'titulo': 'Recepcionista para Rest. Gourmet',
+        'empresa': 'La Maison Sorocaba',
+        'local': 'Wanel Ville, Sorocaba',
+        'valor': '180',
+        'data': 'Abr/2026',
+      },
+      {
+        'status': 'concluido',
+        'titulo': 'Bartender para Evento Corporativo',
+        'empresa': 'EspaÃƒÂ§o Vila Nova',
+        'local': 'Vila Nova, Sorocaba',
+        'valor': '280',
+        'data': 'Mar/2026',
+      },
     ];
-    // Nota: em produção as candidaturas ficam em vagas/{vagaId}/candidaturas/{uid}
-    // Aqui adicionamos também na subcoleção do usuário para facilitar a query em MyJobsPage
+    // Nota: em produÃƒÂ§ÃƒÂ£o as candidaturas ficam em vagas/{vagaId}/candidaturas/{uid}
+    // Aqui adicionamos tambÃƒÂ©m na subcoleÃƒÂ§ÃƒÂ£o do usuário para facilitar a query em MyJobsPage
     for (final job in jobsData) {
       final ref = db
           .collection('users')

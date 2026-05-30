@@ -5,10 +5,7 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   ThemeModeNotifier() : super(ThemeMode.dark);
 
   void toggle() {
-    state =
-        state == ThemeMode.dark
-            ? ThemeMode.light
-            : ThemeMode.dark;
+    state = state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
   }
 
   void set(ThemeMode mode) {
@@ -16,10 +13,9 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 }
 
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, ThemeMode>(
-      (ref) => ThemeModeNotifier(),
-    );
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>(
+  (ref) => ThemeModeNotifier(),
+);
 
 class UserRoleNotifier extends StateNotifier<String> {
   UserRoleNotifier() : super('freelancer');
@@ -29,7 +25,6 @@ class UserRoleNotifier extends StateNotifier<String> {
   }
 }
 
-final userRoleProvider =
-    StateNotifierProvider<UserRoleNotifier, String>(
-      (ref) => UserRoleNotifier(),
-    );
+final userRoleProvider = StateNotifierProvider<UserRoleNotifier, String>(
+  (ref) => UserRoleNotifier(),
+);

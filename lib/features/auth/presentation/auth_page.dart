@@ -6,7 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../data/auth_repository.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/app_providers.dart';
-import 'package:ifree_app/core/providers/app_providers.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   const AuthPage({super.key});
@@ -21,19 +20,19 @@ class _AuthPageState extends ConsumerState<AuthPage>
   final _repo = AuthRepository();
 
   // Controllers
-  final _loginEmailCtrl    = TextEditingController();
+  final _loginEmailCtrl = TextEditingController();
   final _loginPasswordCtrl = TextEditingController();
-  final _loginFormKey      = GlobalKey<FormState>();
+  final _loginFormKey = GlobalKey<FormState>();
 
-  final _signupNameCtrl     = TextEditingController();
-  final _signupEmailCtrl    = TextEditingController();
+  final _signupNameCtrl = TextEditingController();
+  final _signupEmailCtrl = TextEditingController();
   final _signupPasswordCtrl = TextEditingController();
-  final _signupFormKey      = GlobalKey<FormState>();
-  String _selectedRole      = 'freelancer';
+  final _signupFormKey = GlobalKey<FormState>();
+  String _selectedRole = 'freelancer';
 
-  bool _isLoading      = false;
-  bool _loginObscure   = true;
-  bool _signupObscure  = true;
+  bool _isLoading = false;
+  bool _loginObscure = true;
+  bool _signupObscure = true;
 
   @override
   void initState() {
@@ -52,16 +51,16 @@ class _AuthPageState extends ConsumerState<AuthPage>
     super.dispose();
   }
 
-  // ── Tradução de erros Firebase ────────────────────────────────────────────
+  // â”â‚¬â”â‚¬ TraduÃƒÂ§ÃƒÂ£o de erros Firebase â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
   String _translateError(dynamic e) {
     if (e is FirebaseAuthException) {
       switch (e.code) {
         case 'email-already-in-use':
-          return 'Este e-mail já está cadastrado. Tente fazer login.';
+          return 'Este e-mail jÃƒÂ¡ estÃƒÂ¡ cadastrado. Tente fazer login.';
         case 'invalid-email':
-          return 'Formato de e-mail inválido.';
+          return 'Formato de e-mail invÃƒÂ¡lido.';
         case 'weak-password':
-          return 'Senha muito fraca. Use mínimo 6 caracteres.';
+          return 'Senha muito fraca. Use mÃƒÂ­nimo 6 caracteres.';
         case 'user-not-found':
           return 'E-mail não encontrado. Crie uma conta.';
         case 'wrong-password':
@@ -70,7 +69,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
         case 'operation-not-allowed':
           return 'Login com e-mail desabilitado no Firebase Console.';
         case 'network-request-failed':
-          return 'Sem conexão. Verifique sua internet.';
+          return 'Sem conexÃƒÂ£o. Verifique sua internet.';
         case 'too-many-requests':
           return 'Muitas tentativas. Aguarde e tente novamente.';
         case 'user-disabled':
@@ -89,14 +88,22 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-        const SizedBox(width: 8),
-        Expanded(child: Text(msg)),
-      ]),
-      backgroundColor: AppColors.error,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(msg)),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 
   Future<void> _afterLogin(String uid) async {
@@ -164,7 +171,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
     return Scaffold(
       body: Stack(
         children: [
-          // ── Fundo decorativo ──────────────────────────────────────────────
+          // â”â‚¬â”â‚¬ Fundo decorativo â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
           Positioned(
             top: -80,
             left: -60,
@@ -173,7 +180,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
               height: 280,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.freelancerPrimary.withOpacity(0.08),
+                color: AppColors.freelancerPrimary.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -185,7 +192,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.gold.withOpacity(0.06),
+                color: AppColors.gold.withValues(alpha: 0.06),
               ),
             ),
           ),
@@ -194,17 +201,22 @@ class _AuthPageState extends ConsumerState<AuthPage>
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.top),
+                constraints: BoxConstraints(
+                  minHeight: size.height - MediaQuery.of(context).padding.top,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: 40),
 
-                    // ── Logo ──────────────────────────────────────────────
+                    // â”â‚¬â”â‚¬ Logo â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
                     Column(
                       children: [
                         ShaderMask(
                           shaderCallback: (b) => const LinearGradient(
-                            colors: [AppColors.freelancerPrimary, AppColors.freelancerSecondary],
+                            colors: [
+                              AppColors.freelancerPrimary,
+                              AppColors.freelancerSecondary,
+                            ],
                           ).createShader(b),
                           child: const Text(
                             'iFree',
@@ -220,7 +232,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                         Text(
                           'Conectando freelancers a restaurantes',
                           style: TextStyle(
-                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                            color: isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondary,
                             fontSize: 13,
                           ),
                         ),
@@ -229,18 +243,24 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
                     const SizedBox(height: 36),
 
-                    // ── Card principal ────────────────────────────────────
+                    // â”â‚¬â”â‚¬ Card principal â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.bgCardDark : AppColors.bgCardLight,
+                        color: isDark
+                            ? AppColors.bgCardDark
+                            : AppColors.bgCardLight,
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
-                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
                           width: 0.8,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.4 : 0.08,
+                            ),
                             blurRadius: 40,
                             offset: const Offset(0, 12),
                           ),
@@ -248,7 +268,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
                       ),
                       child: Column(
                         children: [
-                          // ── Tabs ────────────────────────────────────────
+                          // â”â‚¬â”â‚¬ Tabs â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
                           ClipRRect(
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(28),
@@ -258,7 +278,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                               controller: _tabController,
                               dividerColor: Colors.transparent,
                               indicator: BoxDecoration(
-                                color: AppColors.freelancerPrimary.withOpacity(0.1),
+                                color: AppColors.freelancerPrimary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 border: const Border(
                                   bottom: BorderSide(
                                     color: AppColors.freelancerPrimary,
@@ -285,7 +307,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                                     passCtrl: _loginPasswordCtrl,
                                     formKey: _loginFormKey,
                                     obscure: _loginObscure,
-                                    onToggleObscure: () => setState(() => _loginObscure = !_loginObscure),
+                                    onToggleObscure: () => setState(
+                                      () => _loginObscure = !_loginObscure,
+                                    ),
                                     onLogin: _login,
                                     isLoading: _isLoading,
                                   ),
@@ -295,9 +319,12 @@ class _AuthPageState extends ConsumerState<AuthPage>
                                     passCtrl: _signupPasswordCtrl,
                                     formKey: _signupFormKey,
                                     obscure: _signupObscure,
-                                    onToggleObscure: () => setState(() => _signupObscure = !_signupObscure),
+                                    onToggleObscure: () => setState(
+                                      () => _signupObscure = !_signupObscure,
+                                    ),
                                     selectedRole: _selectedRole,
-                                    onRoleChanged: (r) => setState(() => _selectedRole = r),
+                                    onRoleChanged: (r) =>
+                                        setState(() => _selectedRole = r),
                                     onSignup: _signup,
                                     isLoading: _isLoading,
                                   ),
@@ -311,43 +338,75 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
                     const SizedBox(height: 20),
 
-                    // ── Divider ───────────────────────────────────────────
+                    // â”â‚¬â”â‚¬ Divider â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
                     Row(
                       children: [
-                        Expanded(child: Divider(color: isDark ? AppColors.borderDark : AppColors.borderLight)),
+                        Expanded(
+                          child: Divider(
+                            color: isDark
+                                ? AppColors.borderDark
+                                : AppColors.borderLight,
+                          ),
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('ou', style: TextStyle(color: isDark ? AppColors.textDimDark : AppColors.textDim, fontSize: 12)),
+                          child: Text(
+                            'ou',
+                            style: TextStyle(
+                              color: isDark
+                                  ? AppColors.textDimDark
+                                  : AppColors.textDim,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
-                        Expanded(child: Divider(color: isDark ? AppColors.borderDark : AppColors.borderLight)),
+                        Expanded(
+                          child: Divider(
+                            color: isDark
+                                ? AppColors.borderDark
+                                : AppColors.borderLight,
+                          ),
+                        ),
                       ],
                     ),
 
                     const SizedBox(height: 16),
 
-                    // ── Google Button ─────────────────────────────────────
-                    // CORREÇÃO: botão Google usa signInWithGoogle() do repo
+                    // â”â‚¬â”â‚¬ Google Button â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
+                    // CORREÃƒâ€¡ÃƒÆ’O: botÃƒÂ£o Google usa signInWithGoogle() do repo
                     // O erro "clientId != null" acontecia no Flutter Web por falta
                     // do <meta name="google-signin-client_id"> no index.html.
-                    // SOLUÇÃO: adicionar no web/index.html:
+                    // SOLUÃƒâ€¡ÃƒÆ’O: adicionar no web/index.html:
                     // <meta name="google-signin-client_id" content="SEU_CLIENT_ID.apps.googleusercontent.com">
                     OutlinedButton.icon(
                       onPressed: _isLoading ? null : _loginWithGoogle,
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
                         ),
-                        foregroundColor: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                        foregroundColor: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimary,
                         minimumSize: const Size(double.infinity, 52),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       icon: _GoogleIcon(),
-                      label: const Text('Continuar com Google', style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w500)),
+                      label: const Text(
+                        'Continuar com Google',
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ).animate().fadeIn(delay: 400.ms),
 
                     const SizedBox(height: 12),
 
-                    // ── Esqueci senha ─────────────────────────────────────
+                    // â”â‚¬â”â‚¬ Esqueci senha â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
                     TextButton(
                       onPressed: () => context.go('/forgot-password'),
                       child: const Text('Esqueci minha senha'),
@@ -365,7 +424,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
   }
 }
 
-// ── Google Icon (SVG inline sem dependência) ──────────────────────────────────
+// â”â‚¬â”â‚¬ Google Icon (SVG inline sem dependÃƒªncia) â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 class _GoogleIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -384,23 +443,60 @@ class _GooglePainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
     final scale = size.width / 20;
     paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(Rect.fromLTWH(0, 0, size.width, size.height), -1.5, 3.0, true, paint);
+    canvas.drawArc(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      -1.5,
+      3.0,
+      true,
+      paint,
+    );
     paint.color = const Color(0xFF34A853);
-    canvas.drawArc(Rect.fromLTWH(0, 0, size.width, size.height), 1.5, 1.5, true, paint);
+    canvas.drawArc(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      1.5,
+      1.5,
+      true,
+      paint,
+    );
     paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(Rect.fromLTWH(0, 0, size.width, size.height), 3.0, 1.6, true, paint);
+    canvas.drawArc(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      3.0,
+      1.6,
+      true,
+      paint,
+    );
     paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(Rect.fromLTWH(0, 0, size.width, size.height), -3.14, 1.7, true, paint);
+    canvas.drawArc(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      -3.14,
+      1.7,
+      true,
+      paint,
+    );
     paint.color = Colors.white;
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width * 0.32, paint);
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2),
+      size.width * 0.32,
+      paint,
+    );
     paint.color = const Color(0xFF4285F4);
-    canvas.drawRect(Rect.fromLTWH(size.width * 0.5, size.height * 0.42, size.width * 0.48 * scale, size.height * 0.16), paint);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        size.width * 0.5,
+        size.height * 0.42,
+        size.width * 0.48 * scale,
+        size.height * 0.16,
+      ),
+      paint,
+    );
   }
+
   @override
   bool shouldRepaint(_) => false;
 }
 
-// ── Login Form ────────────────────────────────────────────────────────────────
+// â”â‚¬â”â‚¬ Login Form â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 class _LoginForm extends StatelessWidget {
   final TextEditingController emailCtrl;
   final TextEditingController passCtrl;
@@ -434,7 +530,7 @@ class _LoginForm extends StatelessWidget {
               prefixIcon: Icon(Icons.email_outlined),
             ),
             validator: (v) =>
-                v != null && v.contains('@') ? null : 'E-mail inválido',
+                v != null && v.contains('@') ? null : 'E-mail invÃƒÂ¡lido',
           ),
           const SizedBox(height: 14),
           TextFormField(
@@ -444,12 +540,16 @@ class _LoginForm extends StatelessWidget {
               labelText: 'Senha',
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
-                icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                icon: Icon(
+                  obscure
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
                 onPressed: onToggleObscure,
               ),
             ),
             validator: (v) =>
-                v != null && v.length >= 6 ? null : 'Mínimo 6 caracteres',
+                v != null && v.length >= 6 ? null : 'MÃƒÂ­nimo 6 caracteres',
             onFieldSubmitted: (_) => onLogin(),
           ),
           const SizedBox(height: 24),
@@ -460,7 +560,9 @@ class _LoginForm extends StatelessWidget {
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Entrar'),
           ),
@@ -470,7 +572,7 @@ class _LoginForm extends StatelessWidget {
   }
 }
 
-// ── Signup Form ───────────────────────────────────────────────────────────────
+// â”â‚¬â”â‚¬ Signup Form â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 class _SignupForm extends StatelessWidget {
   final TextEditingController nameCtrl;
   final TextEditingController emailCtrl;
@@ -522,7 +624,7 @@ class _SignupForm extends StatelessWidget {
               prefixIcon: Icon(Icons.email_outlined),
             ),
             validator: (v) =>
-                v != null && v.contains('@') ? null : 'E-mail inválido',
+                v != null && v.contains('@') ? null : 'E-mail invÃƒÂ¡lido',
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -532,19 +634,23 @@ class _SignupForm extends StatelessWidget {
               labelText: 'Senha',
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
-                icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                icon: Icon(
+                  obscure
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
                 onPressed: onToggleObscure,
               ),
             ),
             validator: (v) =>
-                v != null && v.length >= 6 ? null : 'Mínimo 6 caracteres',
+                v != null && v.length >= 6 ? null : 'MÃƒÂ­nimo 6 caracteres',
           ),
           const SizedBox(height: 14),
-          // ── Seleção de papel ──────────────────────────────────────────────
+          // â”â‚¬â”â‚¬ SeleÃƒÂ§ÃƒÂ£o de papel â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
           Row(
             children: [
               _RoleTile(
-                label: '🧑‍🍳  Freelancer',
+                label: 'Ã°Å¸Â§‘ââ‚¬ÂÃ°Å¸ÂÂ³  Freelancer',
                 subtitle: 'Busco trabalho',
                 value: 'freelancer',
                 group: selectedRole,
@@ -553,7 +659,7 @@ class _SignupForm extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               _RoleTile(
-                label: '🏪  Restaurante',
+                label: 'Ã°Å¸Âª  Restaurante',
                 subtitle: 'Contrato talentos',
                 value: 'company',
                 group: selectedRole,
@@ -570,7 +676,9 @@ class _SignupForm extends StatelessWidget {
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Criar conta'),
           ),
@@ -607,29 +715,37 @@ class _RoleTile extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? primary.withOpacity(0.12) : Colors.transparent,
+            color: selected
+                ? primary.withValues(alpha: 0.12)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected ? primary : Colors.grey.withOpacity(0.2),
+              color: selected ? primary : Colors.grey.withValues(alpha: 0.2),
               width: selected ? 1.5 : 0.8,
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? primary : null,
-                    fontFamily: 'Sora',
-                  )),
-              Text(subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: selected ? primary.withOpacity(0.7) : Colors.grey,
-                    fontFamily: 'Sora',
-                  )),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? primary : null,
+                  fontFamily: 'Sora',
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: selected
+                      ? primary.withValues(alpha: 0.7)
+                      : Colors.grey,
+                  fontFamily: 'Sora',
+                ),
+              ),
             ],
           ),
         ),
