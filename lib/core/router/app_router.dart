@@ -52,14 +52,8 @@ final GoRouter appRouter = GoRouter(
         return '/freelancer';
       },
     ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const AuthPage(),
-    ),
-    GoRoute(
-      path: '/auth',
-      builder: (context, state) => const AuthPage(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const AuthPage()),
+    GoRoute(path: '/auth', builder: (context, state) => const AuthPage()),
 
     GoRoute(
       path: '/freelancer',
@@ -70,17 +64,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/freelancer/search',
-      builder: (context, state) => const _FreelancerShell(
-        selectedIndex: 1,
-        child: JobSearchScreen(),
-      ),
+      builder: (context, state) =>
+          const _FreelancerShell(selectedIndex: 1, child: JobSearchScreen()),
     ),
     GoRoute(
       path: '/freelancer/my-jobs',
-      builder: (context, state) => const _FreelancerShell(
-        selectedIndex: 2,
-        child: MyJobsPage(),
-      ),
+      builder: (context, state) =>
+          const _FreelancerShell(selectedIndex: 2, child: MyJobsPage()),
     ),
     GoRoute(
       path: '/freelancer/profile',
@@ -92,17 +82,13 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: '/company',
-      builder: (context, state) => const _CompanyShell(
-        selectedIndex: 0,
-        child: CompanyDashboard(),
-      ),
+      builder: (context, state) =>
+          const _CompanyShell(selectedIndex: 0, child: CompanyDashboard()),
     ),
     GoRoute(
       path: '/company/dashboard',
-      builder: (context, state) => const _CompanyShell(
-        selectedIndex: 0,
-        child: CompanyDashboard(),
-      ),
+      builder: (context, state) =>
+          const _CompanyShell(selectedIndex: 0, child: CompanyDashboard()),
     ),
     GoRoute(
       path: '/company/create-vacancy',
@@ -110,10 +96,8 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/company/profile',
-      builder: (context, state) => const _CompanyShell(
-        selectedIndex: 1,
-        child: ProfileRestaurantPage(),
-      ),
+      builder: (context, state) =>
+          const _CompanyShell(selectedIndex: 1, child: ProfileRestaurantPage()),
     ),
     GoRoute(
       path: '/company/candidates/:vagaId',
@@ -139,10 +123,7 @@ final GoRouter appRouter = GoRouter(
             state.uri.queryParameters['conversationId'] ?? '';
         final title = state.uri.queryParameters['title'] ?? 'Chat';
 
-        return ChatPage(
-          conversationId: conversationId,
-          title: title,
-        );
+        return ChatPage(conversationId: conversationId, title: title);
       },
     ),
   ],
@@ -152,10 +133,7 @@ class _FreelancerShell extends StatelessWidget {
   final int selectedIndex;
   final Widget child;
 
-  const _FreelancerShell({
-    required this.selectedIndex,
-    required this.child,
-  });
+  const _FreelancerShell({required this.selectedIndex, required this.child});
 
   void _goToTab(BuildContext context, int index) {
     switch (index) {
@@ -212,10 +190,7 @@ class _CompanyShell extends StatelessWidget {
   final int selectedIndex;
   final Widget child;
 
-  const _CompanyShell({
-    required this.selectedIndex,
-    required this.child,
-  });
+  const _CompanyShell({required this.selectedIndex, required this.child});
 
   void _goToTab(BuildContext context, int index) {
     switch (index) {
@@ -255,41 +230,28 @@ class _CompanyShell extends StatelessWidget {
 class _NotFoundPage extends StatelessWidget {
   final String message;
 
-  const _NotFoundPage({
-    required this.message,
-  });
+  const _NotFoundPage({required this.message});
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Página não encontrada'),
-      ),
+      appBar: AppBar(title: const Text('Página não encontrada')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                size: 54,
-              ),
+              const Icon(Icons.error_outline_rounded, size: 54),
               const SizedBox(height: 14),
               const Text(
                 'Page Not Found',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-              ),
+              Text(message, textAlign: TextAlign.center),
               const SizedBox(height: 18),
               FilledButton.icon(
                 onPressed: () {

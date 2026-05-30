@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +15,8 @@ class CompanyDashboard extends StatefulWidget {
 class _CompanyDashboardState extends State<CompanyDashboard> {
   final VagaRepository _repository = VagaRepository();
 
+  bool _updating = false;
+
   User? get _user => FirebaseAuth.instance.currentUser;
 
   @override
@@ -25,7 +26,7 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
     if (user == null) {
       return const Scaffold(
         body: Center(
-          child: Text('FaÃƒÂ§a login para acessar o painel da empresa.'),
+          child: Text('Faça login para acessar o painel da empresa.'),
         ),
       );
     }
@@ -45,271 +46,188 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
             icon: const Icon(Icons.storefront_rounded),
             tooltip: 'Perfil da empresa',
           ),
-          IconButton(
-            onPressed: () => setState(() {}),
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Atualizar',
-          ),
         ],
       ),
       body: StreamBuilder<List<VagaModel>>(
         stream: _repository.watchVagasDaEmpresa(user.uid),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const _DashboardLoading();
-          }
-
-          if (snapshot.hasError) {
-            return _ErrorState(
-              message: 'Não foi possível carregar suas vagas.',
-              onRetry: () => setState(() {}),
-            );
-          }
-
+          final loading = snapshot.connectionState == ConnectionState.waiting;
           final vagas = snapshot.data ?? [];
 
-          final vagasAtivas = vagas
-              .where((vaga) => vaga.status == 'ativa')
-              .length;
-          final vagasFinalizadas = vagas
+          final ativas = vagas.where((vaga) => vaga.status == 'ativa').length;
+          final finalizadas = vagas
               .where((vaga) => vaga.status == 'finalizada')
               .length;
-          final vagasCanceladas = vagas
+          final canceladas = vagas
               .where((vaga) => vaga.status == 'cancelada')
               .length;
 
-          return FutureBuilder<_CandidatesSummary>(
-            future: _loadCandidatesSummary(vagas),
-            builder: (context, summarySnapshot) {
-              final summary =
-                  summarySnapshot.data ?? const _CandidatesSummary();
-
-              return RefreshIndicator(
-                onRefresh: () async => setState(() {}),
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
+          return RefreshIndicator(
+            onRefresh: () async => setState(() {}),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _HeaderCard(
+                  title: 'Olá, empresa',
+                  subtitle: 'Gerencie suas vagas, candidatos e contratações.',
+                ),
+                const SizedBox(height: 16),
+                Row(
                   children: [
-                    _HeaderCard(
-                      companyName: user.displayName?.trim().isNotEmpty == true
-                          ? user.displayName!.trim()
-                          : 'Sua empresa',
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Ativas',
-                            value: vagasAtivas.toString(),
-                            icon: Icons.work_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Candidatos',
-                            value: summary.total.toString(),
-                            icon: Icons.groups_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Aprovados',
-                            value: summary.aprovados.toString(),
-                            icon: Icons.check_circle_rounded,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _MiniStatusCard(
-                            title: 'Em análise',
-                            value: summary.emAnalise.toString(),
-                            icon: Icons.hourglass_top_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _MiniStatusCard(
-                            title: 'Recusados',
-                            value: summary.recusados.toString(),
-                            icon: Icons.cancel_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _MiniStatusCard(
-                            title: 'Canceladas',
-                            value: vagasCanceladas.toString(),
-                            icon: Icons.block_rounded,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    FilledButton.icon(
-                      onPressed: () => context.go('/company/create-vacancy'),
-                      icon: const Icon(Icons.add_rounded),
-                      label: const Text('Criar nova vaga'),
-                    ),
-                    const SizedBox(height: 22),
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Suas vagas',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${vagas.length} publicadas',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.62),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    if (vagas.isEmpty)
-                      const _EmptyState()
-                    else
-                      ...vagas.map(
-                        (vaga) => Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: _CompanyVagaCard(
-                            vaga: vaga,
-                            onViewCandidates: () {
-                              context.push('/company/candidates/${vaga.id}');
-                            },
-                            onFinish: vaga.status == 'ativa'
-                                ? () => _finishVaga(vaga.id)
-                                : null,
-                            onCancel: vaga.status == 'ativa'
-                                ? () => _cancelVaga(vaga.id)
-                                : null,
-                          ),
-                        ),
+                    Expanded(
+                      child: _StatCard(
+                        title: 'Publicadas',
+                        value: vagas.length.toString(),
+                        icon: Icons.work_rounded,
                       ),
-                    if (vagasFinalizadas > 0) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        '$vagasFinalizadas vaga(s) finalizada(s) no histÃƒÂ³rico.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.58),
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _StatCard(
+                        title: 'Ativas',
+                        value: ativas.toString(),
+                        icon: Icons.check_circle_rounded,
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _StatCard(
+                        title: 'Finalizadas',
+                        value: finalizadas.toString(),
+                        icon: Icons.flag_rounded,
+                      ),
+                    ),
                   ],
                 ),
-              );
-            },
+                if (canceladas > 0) ...[
+                  const SizedBox(height: 10),
+                  _MiniInfoCard(
+                    icon: Icons.cancel_rounded,
+                    text: '$canceladas vaga(s) cancelada(s)',
+                  ),
+                ],
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => context.go('/company/create-vacancy'),
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Criar nova vaga'),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Suas vagas',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      vagas.length == 1
+                          ? '1 publicada'
+                          : '${vagas.length} publicadas',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (loading)
+                  const _LoadingList()
+                else if (vagas.isEmpty)
+                  const _EmptyState()
+                else
+                  ...vagas.map(
+                    (vaga) => Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: _CompanyVagaCard(
+                        vaga: vaga,
+                        updating: _updating,
+                        onCandidates: () {
+                          context.go('/company/candidates/${vaga.id}');
+                        },
+                        onCancel: vaga.status == 'ativa'
+                            ? () => _cancelarVaga(vaga)
+                            : null,
+                        onFinish: vaga.status == 'ativa'
+                            ? () => _finalizarVaga(vaga)
+                            : null,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Future<_CandidatesSummary> _loadCandidatesSummary(
-    List<VagaModel> vagas,
-  ) async {
-    if (vagas.isEmpty) {
-      return const _CandidatesSummary();
-    }
-
-    int total = 0;
-    int aprovados = 0;
-    int recusados = 0;
-    int emAnalise = 0;
-
-    for (final vaga in vagas) {
-      try {
-        final snapshot = await FirebaseFirestore.instance
-            .collection('vagas')
-            .doc(vaga.id)
-            .collection('candidaturas')
-            .get();
-
-        for (final doc in snapshot.docs) {
-          total++;
-          final status = doc.data()['status']?.toString() ?? 'em_analise';
-
-          switch (status) {
-            case 'aprovado':
-              aprovados++;
-              break;
-            case 'recusado':
-              recusados++;
-              break;
-            default:
-              emAnalise++;
-          }
-        }
-      } catch (_) {
-        // MantÃƒÂ©m o painel funcionando mesmo se alguma subcoleÃƒÂ§ÃƒÂ£o falhar.
-      }
-    }
-
-    return _CandidatesSummary(
-      total: total,
-      aprovados: aprovados,
-      recusados: recusados,
-      emAnalise: emAnalise,
-    );
-  }
-
-  Future<void> _finishVaga(String vagaId) async {
-    final confirm = await _confirmAction(
-      title: 'Finalizar vaga?',
-      message:
-          'A vaga serÃƒÂ¡ marcada como finalizada e não aparecerÃƒÂ¡ mais como ativa.',
-      confirmText: 'Finalizar',
-    );
-
-    if (!confirm) return;
-
-    try {
-      await _repository.encerrarVaga(vagaId);
-
-      if (!mounted) return;
-      _showSnackBar('Vaga finalizada com sucesso.');
-    } catch (_) {
-      if (!mounted) return;
-      _showSnackBar('Não foi possível finalizar a vaga.', isError: true);
-    }
-  }
-
-  Future<void> _cancelVaga(String vagaId) async {
+  Future<void> _cancelarVaga(VagaModel vaga) async {
     final confirm = await _confirmAction(
       title: 'Cancelar vaga?',
       message:
-          'A vaga serÃƒÂ¡ marcada como cancelada e não aparecerÃƒÂ¡ mais como ativa.',
+          'A vaga "${vaga.titulo}" será marcada como cancelada e deixará de aparecer como ativa.',
       confirmText: 'Cancelar vaga',
     );
 
     if (!confirm) return;
 
+    await _updateVaga(
+      action: () => _repository.cancelarVaga(vaga.id),
+      successMessage: 'Vaga cancelada com sucesso.',
+      errorMessage: 'Não foi possível cancelar a vaga.',
+    );
+  }
+
+  Future<void> _finalizarVaga(VagaModel vaga) async {
+    final confirm = await _confirmAction(
+      title: 'Finalizar vaga?',
+      message:
+          'A vaga "${vaga.titulo}" será marcada como finalizada. Use esta opção quando a contratação já tiver sido concluída.',
+      confirmText: 'Finalizar',
+    );
+
+    if (!confirm) return;
+
+    await _updateVaga(
+      action: () => _repository.encerrarVaga(vaga.id),
+      successMessage: 'Vaga finalizada com sucesso.',
+      errorMessage: 'Não foi possível finalizar a vaga.',
+    );
+  }
+
+  Future<void> _updateVaga({
+    required Future<void> Function() action,
+    required String successMessage,
+    required String errorMessage,
+  }) async {
+    setState(() {
+      _updating = true;
+    });
+
     try {
-      await _repository.cancelarVaga(vagaId);
+      await action();
 
       if (!mounted) return;
-      _showSnackBar('Vaga cancelada com sucesso.');
+
+      _showSnackBar(successMessage);
     } catch (_) {
       if (!mounted) return;
-      _showSnackBar('Não foi possível cancelar a vaga.', isError: true);
+
+      _showSnackBar(errorMessage, isError: true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updating = false;
+        });
+      }
     }
   }
 
@@ -355,24 +273,11 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
   }
 }
 
-class _CandidatesSummary {
-  final int total;
-  final int aprovados;
-  final int recusados;
-  final int emAnalise;
-
-  const _CandidatesSummary({
-    this.total = 0,
-    this.aprovados = 0,
-    this.recusados = 0,
-    this.emAnalise = 0,
-  });
-}
-
 class _HeaderCard extends StatelessWidget {
-  final String companyName;
+  final String title;
+  final String subtitle;
 
-  const _HeaderCard({required this.companyName});
+  const _HeaderCard({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -410,22 +315,22 @@ class _HeaderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  companyName,
+                  title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 21,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Gerencie vagas e acompanhe candidatos.',
+                  subtitle,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.86),
                     fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -470,10 +375,11 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             title,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
               color: colorScheme.onSurface.withValues(alpha: 0.62),
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -482,16 +388,11 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _MiniStatusCard extends StatelessWidget {
-  final String title;
-  final String value;
+class _MiniInfoCard extends StatelessWidget {
   final IconData icon;
+  final String text;
 
-  const _MiniStatusCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-  });
+  const _MiniInfoCard({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -500,20 +401,19 @@ class _MiniStatusCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.46),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: colorScheme.primary),
-          const SizedBox(width: 7),
+          Icon(icon, color: colorScheme.primary, size: 18),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
-              title,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+              text,
+              style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
         ],
       ),
     );
@@ -522,23 +422,25 @@ class _MiniStatusCard extends StatelessWidget {
 
 class _CompanyVagaCard extends StatelessWidget {
   final VagaModel vaga;
-  final VoidCallback onViewCandidates;
-  final VoidCallback? onFinish;
+  final bool updating;
+  final VoidCallback onCandidates;
   final VoidCallback? onCancel;
+  final VoidCallback? onFinish;
 
   const _CompanyVagaCard({
     required this.vaga,
-    required this.onViewCandidates,
-    required this.onFinish,
+    required this.updating,
+    required this.onCandidates,
     required this.onCancel,
+    required this.onFinish,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isActive = vaga.status == 'ativa';
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -562,12 +464,15 @@ class _CompanyVagaCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   vaga.titulo,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
               _StatusBadge(status: vaga.status),
             ],
           ),
@@ -595,56 +500,51 @@ class _CompanyVagaCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               vaga.descricao,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                height: 1.4,
-                color: colorScheme.onSurface.withValues(alpha: 0.72),
+                height: 1.35,
+                color: colorScheme.onSurface.withValues(alpha: 0.76),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'R\$ ${vaga.valor}',
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              OutlinedButton.icon(
-                onPressed: onViewCandidates,
-                icon: const Icon(Icons.groups_rounded),
-                label: const Text('Candidatos'),
-              ),
-            ],
+          const SizedBox(height: 14),
+          Text(
+            'R\$ ${vaga.valor}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-          if (isActive) ...[
-            const SizedBox(height: 10),
-            Row(
+          const SizedBox(height: 14),
+          if (updating)
+            const LinearProgressIndicator()
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
+                OutlinedButton.icon(
+                  onPressed: onCandidates,
+                  icon: const Icon(Icons.groups_rounded),
+                  label: const Text('Candidatos'),
+                ),
+                if (onCancel != null)
+                  OutlinedButton.icon(
                     onPressed: onCancel,
                     icon: const Icon(Icons.close_rounded),
                     label: const Text('Cancelar'),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton.icon(
+                if (onFinish != null)
+                  FilledButton.icon(
                     onPressed: onFinish,
                     icon: const Icon(Icons.check_rounded),
                     label: const Text('Finalizar'),
                   ),
-                ),
               ],
             ),
-          ],
         ],
       ),
     );
@@ -721,7 +621,7 @@ class _InfoChip extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               color: colorScheme.onSurface.withValues(alpha: 0.72),
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -741,7 +641,7 @@ class _StatusBadge extends StatelessWidget {
 
     final color = switch (normalized) {
       'ativa' => Colors.green,
-      'finalizada' => Colors.blueGrey,
+      'finalizada' => Colors.blue,
       'cancelada' => Colors.red,
       _ => Colors.orange,
     };
@@ -771,6 +671,29 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+class _LoadingList extends StatelessWidget {
+  const _LoadingList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        4,
+        (index) => Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          height: 178,
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(22),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
@@ -788,84 +711,22 @@ class _EmptyState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.post_add_rounded, size: 48, color: colorScheme.primary),
+          Icon(Icons.work_off_outlined, size: 48, color: colorScheme.primary),
           const SizedBox(height: 12),
           const Text(
-            'Nenhuma vaga criada ainda',
-            textAlign: TextAlign.center,
+            'Nenhuma vaga publicada',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 6),
           Text(
-            'Crie sua primeira vaga para comeÃƒÂ§ar a receber candidatos.',
+            'Crie sua primeira vaga para receber candidatos.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: colorScheme.onSurface.withValues(alpha: 0.64),
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DashboardLoading extends StatelessWidget {
-  const _DashboardLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: List.generate(
-        4,
-        (index) => Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          height: index == 0 ? 130 : 180,
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(22),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 14),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Tentar novamente'),
-            ),
-          ],
-        ),
       ),
     );
   }
