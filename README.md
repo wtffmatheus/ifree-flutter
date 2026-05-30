@@ -1,17 +1,38 @@
-# ifree_app
+# iFree
 
-A new Flutter project.
+O **iFree** é um aplicativo Flutter para conectar freelancers a restaurantes, bares e estabelecimentos que precisam contratar profissionais por diária ou vaga temporária.
 
-## Getting Started
+## Funcionalidades
 
-This project is a starting point for a Flutter application.
+### Freelancer
+- Cadastro e login com e-mail/senha
+- Login com Google
+- Busca de vagas
+- Filtro por categoria
+- Candidatura em vagas
+- Página de “Meus Jobs”
+- Perfil do freelancer
 
-A few resources to get you started if this is your first Flutter project:
+### Restaurante / Empresa
+- Cadastro de empresa
+- Criação de vagas
+- Visualização de candidatos
+- Perfil do restaurante
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Tecnologias usadas
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Flutter
+- Dart
+- Firebase Auth
+- Cloud Firestore
+- Google Sign-In
+- GoRouter
+- Riverpod
+- Geolocator
+- Material 3
+
+## Como rodar o projeto
+
+```bash
+flutter pub get
+flutter run
