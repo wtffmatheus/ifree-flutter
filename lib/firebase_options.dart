@@ -64,7 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '313330203623',
     projectId: 'ifree-ab709',
     storageBucket: 'ifree-ab709.firebasestorage.app',
-    iosClientId: '313330203623-avsmp4ma5rcp5ks9sq1rprt76ron9ula.apps.googleusercontent.com',
+    iosClientId:
+        '313330203623-avsmp4ma5rcp5ks9sq1rprt76ron9ula.apps.googleusercontent.com',
     iosBundleId: 'com.example.ifreeApp',
   );
 
@@ -74,7 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '313330203623',
     projectId: 'ifree-ab709',
     storageBucket: 'ifree-ab709.firebasestorage.app',
-    iosClientId: '313330203623-avsmp4ma5rcp5ks9sq1rprt76ron9ula.apps.googleusercontent.com',
+    iosClientId:
+        '313330203623-avsmp4ma5rcp5ks9sq1rprt76ron9ula.apps.googleusercontent.com',
     iosBundleId: 'com.example.ifreeApp',
   );
 

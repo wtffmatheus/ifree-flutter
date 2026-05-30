@@ -1,237 +1,430 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/app_widgets.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
-class CandidatesScreen extends StatelessWidget {
+import '../../chat/data/chat_repository.dart';
+import '../../chat/presentation/chat_page.dart';
+import '../../jobs/data/vaga_repository.dart';
+
+class CandidatesScreen extends StatefulWidget {
   final String vagaId;
+
   const CandidatesScreen({super.key, required this.vagaId});
 
-  Color _statusColor(String s) {
-    switch (s) {
-      case 'aprovado': return AppColors.aprovado;
-      case 'concluido': return AppColors.concluido;
-      default: return AppColors.analise;
-    }
-  }
+  @override
+  State<CandidatesScreen> createState() => _CandidatesScreenState();
+}
 
-  String _statusLabel(String s) {
-    switch (s) {
-      case 'aprovado': return 'Aprovado';
-      case 'concluido': return 'Concluído';
-      default: return 'Em Análise';
-    }
-  }
+class _CandidatesScreenState extends State<CandidatesScreen> {
+  final VagaRepository _repository = VagaRepository();
+  final ChatRepository _chatRepository = ChatRepository();
 
-  // Atualiza status tanto na vaga quanto no índice do freelancer
-  Future<void> _updateStatus(BuildContext ctx, String candidaturaId, String freelancerId, String newStatus) async {
-    final batch = FirebaseFirestore.instance.batch();
-
-    // Atualiza na coleção da vaga
-    final vagaRef = FirebaseFirestore.instance
-        .collection('vagas').doc(vagaId).collection('candidaturas').doc(candidaturaId);
-    batch.update(vagaRef, {'status': newStatus});
-
-    // Atualiza no índice do freelancer (resolve consistência e myJobsPage)
-    if (freelancerId.isNotEmpty) {
-      final indexRef = FirebaseFirestore.instance
-          .collection('users').doc(freelancerId).collection('candidaturas_index').doc(vagaId);
-      batch.update(indexRef, {'status': newStatus});
-    }
-
-    await batch.commit();
-
-    if (ctx.mounted) {
-      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-        content: Row(children: [
-          Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Text('Status atualizado: ${_statusLabel(newStatus)}'),
-        ]),
-        backgroundColor: _statusColor(newStatus),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ));
-    }
-  }
+  bool _updating = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Candidatos')),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('vagas').doc(vagaId).collection('candidaturas').snapshots(),
+      appBar: AppBar(title: const Text('Candidatos'), centerTitle: false),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _repository.watchCandidaturas(widget.vagaId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          final docs = snapshot.data!.docs;
+          if (snapshot.hasError) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(22),
+                child: Text('Não foi possível carregar os candidatos.'),
+              ),
+            );
+          }
+
+          final docs = snapshot.data?.docs ?? [];
+
           if (docs.isEmpty) {
-            return const EmptyState(
-              icon: Icons.people_outline_rounded,
-              title: 'Nenhum candidato ainda',
-              subtitle: 'Quando freelancers se candidatarem, eles aparecerão aqui.',
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(22),
+                child: Text('Nenhum candidato ainda.'),
+              ),
             );
           }
 
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              final data = docs[i].data() as Map<String, dynamic>;
-              final candidaturaId = docs[i].id;
-              final status = data['status'] as String? ?? 'em_analise';
-              final name = data['freelancerName'] as String? ?? 'Freelancer';
-              final email = data['freelancerEmail'] as String? ?? '';
-              final freelancerId = data['freelancerId'] as String? ?? '';
+            separatorBuilder: (_, __) => const SizedBox(height: 14),
+            itemBuilder: (context, index) {
+              final doc = docs[index];
+              final data = doc.data();
 
-              return _CandidatoCard(
-                name: name,
-                email: email,
-                status: status,
-                freelancerId: freelancerId,
-                statusColor: _statusColor(status),
-                statusLabel: _statusLabel(status),
-                onAprovar: status != 'aprovado'
-                    ? () => _updateStatus(context, candidaturaId, freelancerId, 'aprovado')
+              return _CandidateCard(
+                data: data,
+                updating: _updating,
+                onApprove: () =>
+                    _updateStatus(freelancerId: doc.id, status: 'aprovado'),
+                onReject: () =>
+                    _updateStatus(freelancerId: doc.id, status: 'recusado'),
+                onChat: () => _openChat(doc.id, data),
+                onFinishAndRate: data['status']?.toString() == 'aprovado'
+                    ? () => _finishAndRate(doc.id, data)
                     : null,
-                onConcluir: status == 'aprovado'
-                    ? () => _updateStatus(context, candidaturaId, freelancerId, 'concluido')
-                    : null,
-              ).animate(delay: Duration(milliseconds: i * 70)).fadeIn().slideY(begin: 0.1);
+              );
             },
           );
         },
       ),
     );
   }
+
+  Future<void> _openChat(String freelancerId, Map<String, dynamic> data) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return;
+
+    final vaga = await _repository.getVagaById(widget.vagaId);
+
+    if (vaga == null || !mounted) return;
+
+    final freelancerName =
+        data['freelancerName']?.toString().trim().isNotEmpty == true
+        ? data['freelancerName'].toString()
+        : 'Freelancer';
+
+    final conversationId = await _chatRepository.createOrGetConversation(
+      vagaId: widget.vagaId,
+      empresaId: user.uid,
+      freelancerId: freelancerId,
+      empresaName: vaga.empresa,
+      freelancerName: freelancerName,
+      vagaTitulo: vaga.titulo,
+    );
+
+    if (!mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            ChatPage(conversationId: conversationId, title: freelancerName),
+      ),
+    );
+  }
+
+  Future<void> _updateStatus({
+    required String freelancerId,
+    required String status,
+  }) async {
+    setState(() {
+      _updating = true;
+    });
+
+    try {
+      await _repository.atualizarStatusCandidatura(
+        vagaId: widget.vagaId,
+        freelancerId: freelancerId,
+        status: status,
+      );
+
+      if (!mounted) return;
+
+      _showSnackBar(
+        status == 'aprovado' ? 'Candidato aprovado.' : 'Candidato recusado.',
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      _showSnackBar('Não foi possível atualizar o candidato.', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updating = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _finishAndRate(
+    String freelancerId,
+    Map<String, dynamic> data,
+  ) async {
+    final result = await showDialog<_RatingResult>(
+      context: context,
+      builder: (context) {
+        return const _RatingDialog();
+      },
+    );
+
+    if (result == null) return;
+
+    setState(() {
+      _updating = true;
+    });
+
+    try {
+      await _repository.finalizarJobComAvaliacao(
+        vagaId: widget.vagaId,
+        freelancerId: freelancerId,
+        rating: result.rating,
+        comment: result.comment,
+      );
+
+      if (!mounted) return;
+
+      _showSnackBar('Job finalizado e avaliação enviada.');
+    } catch (e) {
+      if (!mounted) return;
+
+      final message = e.toString().replaceAll('Exception: ', '');
+
+      _showSnackBar(
+        message.isEmpty ? 'Não foi possível finalizar o job.' : message,
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updating = false;
+        });
+      }
+    }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isError ? colorScheme.error : Colors.green.shade700,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+  }
 }
 
-class _CandidatoCard extends StatelessWidget {
-  final String name;
-  final String email;
-  final String status;
-  final String freelancerId;
-  final Color statusColor;
-  final String statusLabel;
-  final VoidCallback? onAprovar;
-  final VoidCallback? onConcluir;
+class _CandidateCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final bool updating;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
+  final VoidCallback onChat;
+  final VoidCallback? onFinishAndRate;
 
-  const _CandidatoCard({
-    required this.name,
-    required this.email,
-    required this.status,
-    required this.freelancerId,
-    required this.statusColor,
-    required this.statusLabel,
-    this.onAprovar,
-    this.onConcluir,
+  const _CandidateCard({
+    required this.data,
+    required this.updating,
+    required this.onApprove,
+    required this.onReject,
+    required this.onChat,
+    required this.onFinishAndRate,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final name = data['freelancerName']?.toString().trim().isNotEmpty == true
+        ? data['freelancerName'].toString()
+        : 'Freelancer';
+
+    final email = data['freelancerEmail']?.toString() ?? '';
+    final phone = data['freelancerPhone']?.toString() ?? '';
+    final city = data['freelancerCity']?.toString() ?? '';
+    final status = data['status']?.toString() ?? 'em_analise';
 
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.bgCardDark : AppColors.bgCardLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight, width: 0.8),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.22)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IFreeAvatar(name: name, size: 48),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Sora', color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
-                      Text(email, style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary, fontFamily: 'Sora')),
-                    ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
+                child: Text(
+                  name[0].toUpperCase(),
+                  style: TextStyle(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                StatusBadge(status: status),
-              ],
-            ),
-
-            // Ver perfil do freelancer
-            if (freelancerId.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('users').doc(freelancerId).get(),
-                builder: (context, snap) {
-                  if (!snap.hasData || !snap.data!.exists) return const SizedBox.shrink();
-                  final d = snap.data!.data() as Map<String, dynamic>? ?? {};
-                  final bio = d['bio'] as String? ?? '';
-                  final media = (d['avaliacaoMedia'] as num?)?.toDouble() ?? 0;
-                  if (bio.isEmpty && media == 0) return const SizedBox.shrink();
-                  return Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.bgCard2Dark : AppColors.bgCard2Light,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (media > 0) Row(children: [
-                          StarRating(rating: media, size: 14),
-                          const SizedBox(width: 6),
-                          Text(media.toStringAsFixed(1), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.gold, fontFamily: 'Sora')),
-                        ]),
-                        if (bio.isNotEmpty) ...[
-                          if (media > 0) const SizedBox(height: 4),
-                          Text(bio, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary, fontFamily: 'Sora')),
-                        ],
-                      ],
-                    ),
-                  );
-                },
               ),
-            ],
-
-            const SizedBox(height: 14),
-
-            Row(
-              children: [
-                if (onAprovar != null)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: onAprovar,
-                      icon: const Icon(Icons.check_rounded, size: 16, color: AppColors.aprovado),
-                      label: const Text('Aprovar', style: TextStyle(color: AppColors.aprovado)),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.aprovado),
-                        minimumSize: const Size(double.infinity, 42),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
                   ),
-                if (onConcluir != null)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: onConcluir,
-                      icon: const Icon(Icons.task_alt_rounded, size: 16),
-                      label: const Text('Marcar como Concluído'),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 42),
-                        backgroundColor: AppColors.concluido,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        textStyle: const TextStyle(fontSize: 13, fontFamily: 'Sora', fontWeight: FontWeight.w600),
-                      ),
-                    ),
+                ),
+              ),
+              _StatusBadge(status: status),
+            ],
+          ),
+          if (email.isNotEmpty) ...[const SizedBox(height: 8), Text(email)],
+          if (phone.isNotEmpty || city.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text([phone, city].where((e) => e.isNotEmpty).join(' ââ‚¬Â¢ ')),
+          ],
+          const SizedBox(height: 14),
+          if (updating)
+            const LinearProgressIndicator()
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onChat,
+                  icon: const Icon(Icons.chat_rounded),
+                  label: const Text('Chat'),
+                ),
+                if (status == 'em_analise') ...[
+                  OutlinedButton.icon(
+                    onPressed: onReject,
+                    icon: const Icon(Icons.close_rounded),
+                    label: const Text('Recusar'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: onApprove,
+                    icon: const Icon(Icons.check_rounded),
+                    label: const Text('Aprovar'),
+                  ),
+                ],
+                if (onFinishAndRate != null)
+                  FilledButton.icon(
+                    onPressed: onFinishAndRate,
+                    icon: const Icon(Icons.star_rounded),
+                    label: const Text('Finalizar e avaliar'),
                   ),
               ],
             ),
-          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RatingDialog extends StatefulWidget {
+  const _RatingDialog();
+
+  @override
+  State<_RatingDialog> createState() => _RatingDialogState();
+}
+
+class _RatingDialogState extends State<_RatingDialog> {
+  double _rating = 5;
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Finalizar e avaliar'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Nota: ${_rating.toStringAsFixed(1)}'),
+          Slider(
+            value: _rating,
+            min: 1,
+            max: 5,
+            divisions: 8,
+            label: _rating.toStringAsFixed(1),
+            onChanged: (value) {
+              setState(() {
+                _rating = value;
+              });
+            },
+          ),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'ComentÃƒÂ¡rio',
+              hintText: 'Ex: Chegou no horÃƒÂ¡rio e trabalhou muito bem.',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Voltar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(
+              context,
+              _RatingResult(rating: _rating, comment: _commentController.text),
+            );
+          },
+          child: const Text('Finalizar'),
+        ),
+      ],
+    );
+  }
+}
+
+class _RatingResult {
+  final double rating;
+  final String comment;
+
+  const _RatingResult({required this.rating, required this.comment});
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = status.toLowerCase();
+
+    final color = switch (normalized) {
+      'aprovado' => Colors.green,
+      'recusado' => Colors.red,
+      'concluido' => Colors.blue,
+      'cancelada_pelo_freelancer' => Colors.blueGrey,
+      _ => Colors.orange,
+    };
+
+    final label = switch (normalized) {
+      'aprovado' => 'Aprovado',
+      'recusado' => 'Recusado',
+      'concluido' => 'ConcluÃƒÂ­do',
+      'cancelada_pelo_freelancer' => 'Cancelada',
+      _ => 'Em análise',
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );

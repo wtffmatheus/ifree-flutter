@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  // ── Freelancer Light ──────────────────────────────────────────────────────
+  // â”€â”€ Freelancer Light â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static ThemeData get freelancerLight => _build(
     seed: AppColors.freelancerPrimary,
     brightness: Brightness.light,
@@ -11,7 +11,7 @@ class AppTheme {
     surface: AppColors.bgCardLight,
   );
 
-  // ── Freelancer Dark ───────────────────────────────────────────────────────
+  // â”€â”€ Freelancer Dark â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static ThemeData get freelancerDark => _build(
     seed: AppColors.freelancerPrimary,
     brightness: Brightness.dark,
@@ -20,7 +20,7 @@ class AppTheme {
     surface: AppColors.bgCardDark,
   );
 
-  // ── Company Light ─────────────────────────────────────────────────────────
+  // â”€â”€ Company Light â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static ThemeData get companyLight => _build(
     seed: AppColors.companyPrimary,
     brightness: Brightness.light,
@@ -29,7 +29,7 @@ class AppTheme {
     surface: AppColors.bgCardLight,
   );
 
-  // ── Company Dark ──────────────────────────────────────────────────────────
+  // â”€â”€ Company Dark â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static ThemeData get companyDark => _build(
     seed: AppColors.companyPrimary,
     brightness: Brightness.dark,
@@ -46,22 +46,20 @@ class AppTheme {
     required Color surface,
   }) {
     final isDark = brightness == Brightness.dark;
-    final textPrimary =
-        isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
-    final textSecondary =
-        isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
-    final border =
-        isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimary;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondary;
+    final border = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     final colorScheme = ColorScheme.fromSeed(
       seedColor: seed,
       brightness: brightness,
       surface: surface,
       onSurface: textPrimary,
-    ).copyWith(
-      primary: seed,
-      onPrimary: Colors.white,
-    );
+    ).copyWith(primary: seed, onPrimary: Colors.white);
 
     return ThemeData(
       useMaterial3: true,
@@ -70,7 +68,7 @@ class AppTheme {
       scaffoldBackgroundColor: scaffold,
       fontFamily: 'Poppins',
 
-      // ── AppBar ────────────────────────────────────────────────────────────
+      // â”€â”€ AppBar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       appBarTheme: AppBarTheme(
         backgroundColor: scaffold,
         foregroundColor: textPrimary,
@@ -86,12 +84,10 @@ class AppTheme {
         actionsIconTheme: IconThemeData(color: textPrimary),
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
-        shape: Border(
-          bottom: BorderSide(color: border, width: 0.5),
-        ),
+        shape: Border(bottom: BorderSide(color: border, width: 0.5)),
       ),
 
-      // ── Cards ─────────────────────────────────────────────────────────────
+      // â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       cardTheme: CardThemeData(
         color: card,
         elevation: 0,
@@ -102,12 +98,12 @@ class AppTheme {
         margin: EdgeInsets.zero,
       ),
 
-      // ── NavigationBar ─────────────────────────────────────────────────────
+      // â”€â”€ NavigationBar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: isDark
             ? const Color(0xF013131A)
-            : AppColors.bgCardLight.withOpacity(0.95),
-        indicatorColor: seed.withOpacity(0.15),
+            : AppColors.bgCardLight.withValues(alpha: 0.95),
+        indicatorColor: seed.withValues(alpha: 0.15),
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -115,8 +111,7 @@ class AppTheme {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             fontSize: 11,
-            fontWeight:
-                selected ? FontWeight.w700 : FontWeight.w400,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             fontFamily: 'Poppins',
             color: selected ? seed : textSecondary,
           );
@@ -132,15 +127,13 @@ class AppTheme {
         shadowColor: Colors.transparent,
         elevation: 0,
         height: 68,
-        labelBehavior:
-            NavigationDestinationLabelBehavior.alwaysShow,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
 
-      // ── Inputs ────────────────────────────────────────────────────────────
+      // â”€â”€ Inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor:
-            isDark ? const Color(0x0AFFFFFF) : const Color(0x06000000),
+        fillColor: isDark ? const Color(0x0AFFFFFF) : const Color(0x06000000),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: border, width: 0.8),
@@ -155,26 +148,25 @@ class AppTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.error, width: 1.2),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.error, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
-        labelStyle:
-            TextStyle(color: textSecondary, fontFamily: 'Poppins'),
+        labelStyle: TextStyle(color: textSecondary, fontFamily: 'Poppins'),
         hintStyle: TextStyle(
-          color: textSecondary.withOpacity(0.5),
+          color: textSecondary.withValues(alpha: 0.5),
           fontFamily: 'Poppins',
         ),
         prefixIconColor: textSecondary,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
 
-      // ── ElevatedButton ────────────────────────────────────────────────────
+      // â”€â”€ ElevatedButton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: seed,
@@ -182,8 +174,7 @@ class AppTheme {
           elevation: 0,
           shadowColor: Colors.transparent,
           minimumSize: const Size(double.infinity, 52),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -195,14 +186,11 @@ class AppTheme {
         ),
       ),
 
-      // ── OutlinedButton ───────────────────────────────────────────────────
+      // â”€â”€ OutlinedButton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: seed,
-          side: BorderSide(
-            color: seed.withOpacity(0.4),
-            width: 1.2,
-          ),
+          side: BorderSide(color: seed.withValues(alpha: 0.4), width: 1.2),
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -215,7 +203,7 @@ class AppTheme {
         ),
       ),
 
-      // ── TextButton ────────────────────────────────────────────────────────
+      // â”€â”€ TextButton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: seed,
@@ -226,7 +214,7 @@ class AppTheme {
         ),
       ),
 
-      // ── Tabs ─────────────────────────────────────────────────────────────
+      // â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       tabBarTheme: TabBarThemeData(
         labelColor: seed,
         unselectedLabelColor: textSecondary,
@@ -245,29 +233,20 @@ class AppTheme {
         ),
       ),
 
-      // ── Chip ─────────────────────────────────────────────────────────────
+      // â”€â”€ Chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       chipTheme: ChipThemeData(
-        backgroundColor: seed.withOpacity(0.1),
-        selectedColor: seed.withOpacity(0.2),
-        labelStyle:
-            TextStyle(color: seed, fontFamily: 'Poppins'),
-        side: BorderSide(
-          color: seed.withOpacity(0.25),
-          width: 0.8,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        backgroundColor: seed.withValues(alpha: 0.1),
+        selectedColor: seed.withValues(alpha: 0.2),
+        labelStyle: TextStyle(color: seed, fontFamily: 'Poppins'),
+        side: BorderSide(color: seed.withValues(alpha: 0.25), width: 0.8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       ),
 
-      // ── SnackBar ─────────────────────────────────────────────────────────
+      // â”€â”€ SnackBar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         backgroundColor: isDark
             ? const Color(0xFF2A2A38)
             : const Color(0xFF1A1A2E),
@@ -278,12 +257,10 @@ class AppTheme {
         ),
       ),
 
-      // ── Dialog ───────────────────────────────────────────────────────────
+      // â”€â”€ Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       dialogTheme: DialogThemeData(
         backgroundColor: card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         titleTextStyle: TextStyle(
           color: textPrimary,
           fontSize: 18,
@@ -297,9 +274,8 @@ class AppTheme {
         ),
       ),
 
-      // ── Divider ───────────────────────────────────────────────────────────
-      dividerTheme:
-          DividerThemeData(color: border, thickness: 0.5),
+      // â”€â”€ Divider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      dividerTheme: DividerThemeData(color: border, thickness: 0.5),
 
       textTheme: TextTheme(
         displayLarge: TextStyle(

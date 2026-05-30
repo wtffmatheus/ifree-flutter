@@ -1,0 +1,95 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isLoggedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isLoggedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isVagaOwner(vagaId) {
+      return isLoggedIn()
+        && get(/databases/$(database)/documents/vagas/$(vagaId)).data.empresaId == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read: if isLoggedIn();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if false;
+
+      match /candidaturas_index/{vagaId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create: if isOwner(uid);
+        allow update: if isOwner(uid) || isVagaOwner(vagaId) || isAdmin();
+        allow delete: if false;
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow update: if isOwner(uid) || isAdmin();
+        allow create: if isLoggedIn();
+        allow delete: if false;
+      }
+    }
+
+    match /vagas/{vagaId} {
+      allow read: if isLoggedIn();
+      allow create: if isLoggedIn()
+        && request.resource.data.empresaId == request.auth.uid;
+      allow update: if isLoggedIn()
+        && (resource.data.empresaId == request.auth.uid || isAdmin());
+      allow delete: if false;
+
+      match /candidaturas/{freelancerId} {
+        allow read: if isLoggedIn();
+        allow create: if isLoggedIn()
+          && request.auth.uid == freelancerId;
+        allow update: if isLoggedIn()
+          && (
+            request.auth.uid == freelancerId
+            || get(/databases/$(database)/documents/vagas/$(vagaId)).data.empresaId == request.auth.uid
+            || isAdmin()
+          );
+        allow delete: if false;
+      }
+    }
+
+    match /chats/{chatId} {
+      allow read: if isLoggedIn()
+        && request.auth.uid in resource.data.participants;
+
+      allow create: if isLoggedIn()
+        && request.auth.uid in request.resource.data.participants;
+
+      allow update: if isLoggedIn()
+        && request.auth.uid in resource.data.participants;
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isLoggedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+
+        allow create: if isLoggedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+          && request.resource.data.senderId == request.auth.uid;
+
+        allow update, delete: if false;
+      }
+    }
+
+    match /app_config/{docId} {
+      allow read: if isLoggedIn();
+      allow write: if false;
+    }
+  }
+}
