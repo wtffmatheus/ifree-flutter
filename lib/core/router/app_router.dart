@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../widgets/ifree_responsive_shell.dart';
+
 import '../../features/admin/presentation/admin_dashboard_page.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/chat/presentation/chat_page.dart';
@@ -154,34 +156,34 @@ class _FreelancerShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) => _goToTab(context, index),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Início',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search_rounded),
-            label: 'Buscar',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.work_outline_rounded),
-            selectedIcon: Icon(Icons.work_rounded),
-            label: 'Meus Jobs',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Perfil',
-          ),
-        ],
-      ),
+    return IFreeResponsiveShell(
+      selectedIndex: selectedIndex,
+      onDestinationSelected: (index) => _goToTab(context, index),
+      sectionLabel: 'Freelancer',
+      sectionSubtitle: 'Seu trabalho, do seu jeito',
+      destinations: const [
+        IFreeNavItem(
+          label: 'Início',
+          icon: Icons.home_outlined,
+          selectedIcon: Icons.home_rounded,
+        ),
+        IFreeNavItem(
+          label: 'Buscar',
+          icon: Icons.search_outlined,
+          selectedIcon: Icons.search_rounded,
+        ),
+        IFreeNavItem(
+          label: 'Meus Jobs',
+          icon: Icons.work_outline_rounded,
+          selectedIcon: Icons.work_rounded,
+        ),
+        IFreeNavItem(
+          label: 'Perfil',
+          icon: Icons.person_outline_rounded,
+          selectedIcon: Icons.person_rounded,
+        ),
+      ],
+      child: child,
     );
   }
 }
@@ -205,24 +207,24 @@ class _CompanyShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) => _goToTab(context, index),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard_rounded),
-            label: 'Painel',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront_rounded),
-            label: 'Perfil',
-          ),
-        ],
-      ),
+    return IFreeResponsiveShell(
+      selectedIndex: selectedIndex,
+      onDestinationSelected: (index) => _goToTab(context, index),
+      sectionLabel: 'Empresa',
+      sectionSubtitle: 'Contrate com mais agilidade',
+      destinations: const [
+        IFreeNavItem(
+          label: 'Painel',
+          icon: Icons.dashboard_outlined,
+          selectedIcon: Icons.dashboard_rounded,
+        ),
+        IFreeNavItem(
+          label: 'Perfil',
+          icon: Icons.storefront_outlined,
+          selectedIcon: Icons.storefront_rounded,
+        ),
+      ],
+      child: child,
     );
   }
 }
