@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../widgets/ifree_responsive_shell.dart';
+import '../services/user_role_service.dart';
 
 import '../../features/admin/presentation/admin_dashboard_page.dart';
 import '../../features/auth/presentation/auth_page.dart';
+import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/chat/presentation/chat_page.dart';
 import '../../features/freelancer/presentation/freelancer_dashboard.dart';
 import '../../features/freelancer/presentation/job_search_screen.dart';
@@ -30,8 +32,8 @@ final GoRouter appRouter = GoRouter(
       return '/login';
     }
 
-    if (user != null && (location == '/' || isAuthRoute)) {
-      return '/freelancer';
+    if (user != null && isAuthRoute) {
+      return '/';
     }
 
     return null;
@@ -44,18 +46,14 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      redirect: (context, state) {
-        final user = FirebaseAuth.instance.currentUser;
-
-        if (user == null) {
-          return '/login';
-        }
-
-        return '/freelancer';
-      },
+      builder: (context, state) => const _RoleGatePage(),
     ),
     GoRoute(path: '/login', builder: (context, state) => const AuthPage()),
     GoRoute(path: '/auth', builder: (context, state) => const AuthPage()),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
 
     GoRoute(
       path: '/freelancer',
@@ -130,6 +128,78 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+
+class _RoleGatePage extends StatefulWidget {
+  const _RoleGatePage();
+
+  @override
+  State<_RoleGatePage> createState() => _RoleGatePageState();
+}
+
+class _RoleGatePageState extends State<_RoleGatePage> {
+  @override
+  void initState() {
+    super.initState();
+    _resolveRoute();
+  }
+
+  Future<void> _resolveRoute() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      if (mounted) context.go('/login');
+      return;
+    }
+
+    final route = await UserRoleService.getInitialRoute(user.uid);
+
+    if (mounted) {
+      context.go(route);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                'iF',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Preparando seu espaço',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            const SizedBox(
+              width: 180,
+              child: LinearProgressIndicator(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _FreelancerShell extends StatelessWidget {
   final int selectedIndex;
