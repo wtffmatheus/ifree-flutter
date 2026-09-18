@@ -14,7 +14,6 @@ class CompanyDashboard extends StatefulWidget {
 
 class _CompanyDashboardState extends State<CompanyDashboard> {
   final VagaRepository _repository = VagaRepository();
-
   bool _updating = false;
 
   User? get _user => FirebaseAuth.instance.currentUser;
@@ -32,139 +31,85 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Painel da empresa'),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: () => context.go('/notifications'),
-            icon: const Icon(Icons.notifications_rounded),
-            tooltip: 'Notificações',
-          ),
-          IconButton(
-            onPressed: () => context.go('/company/profile'),
-            icon: const Icon(Icons.storefront_rounded),
-            tooltip: 'Perfil da empresa',
-          ),
-        ],
-      ),
-      body: StreamBuilder<List<VagaModel>>(
-        stream: _repository.watchVagasDaEmpresa(user.uid),
-        builder: (context, snapshot) {
-          final loading = snapshot.connectionState == ConnectionState.waiting;
-          final vagas = snapshot.data ?? [];
+      body: SafeArea(
+        child: StreamBuilder<List<VagaModel>>(
+          stream: _repository.watchVagasDaEmpresa(user.uid),
+          builder: (context, snapshot) {
+            final loading = snapshot.connectionState == ConnectionState.waiting;
+            final vagas = snapshot.data ?? <VagaModel>[];
 
-          final ativas = vagas.where((vaga) => vaga.status == 'ativa').length;
-          final finalizadas = vagas
-              .where((vaga) => vaga.status == 'finalizada')
-              .length;
-          final canceladas = vagas
-              .where((vaga) => vaga.status == 'cancelada')
-              .length;
+            final ativas = vagas.where((v) => v.status == 'ativa').length;
+            final finalizadas =
+                vagas.where((v) => v.status == 'finalizada').length;
+            final canceladas =
+                vagas.where((v) => v.status == 'cancelada').length;
 
-          return RefreshIndicator(
-            onRefresh: () async => setState(() {}),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _HeaderCard(
-                  title: 'Olá, empresa',
-                  subtitle: 'Gerencie suas vagas, candidatos e contratações.',
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        title: 'Publicadas',
-                        value: vagas.length.toString(),
-                        icon: Icons.work_rounded,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _StatCard(
-                        title: 'Ativas',
-                        value: ativas.toString(),
-                        icon: Icons.check_circle_rounded,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _StatCard(
-                        title: 'Finalizadas',
-                        value: finalizadas.toString(),
-                        icon: Icons.flag_rounded,
-                      ),
-                    ),
-                  ],
-                ),
-                if (canceladas > 0) ...[
-                  const SizedBox(height: 10),
-                  _MiniInfoCard(
-                    icon: Icons.cancel_rounded,
-                    text: '$canceladas vaga(s) cancelada(s)',
-                  ),
-                ],
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => context.go('/company/create-vacancy'),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('Criar nova vaga'),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Suas vagas',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
+            return RefreshIndicator(
+              onRefresh: () async => setState(() {}),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 34),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1220),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _Header(
+                          onNotifications: () => context.go('/notifications'),
+                          onProfile: () => context.go('/company/profile'),
                         ),
-                      ),
-                    ),
-                    Text(
-                      vagas.length == 1
-                          ? '1 publicada'
-                          : '${vagas.length} publicadas',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (loading)
-                  const _LoadingList()
-                else if (vagas.isEmpty)
-                  const _EmptyState()
-                else
-                  ...vagas.map(
-                    (vaga) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _CompanyVagaCard(
-                        vaga: vaga,
-                        updating: _updating,
-                        onCandidates: () {
-                          context.go('/company/candidates/${vaga.id}');
-                        },
-                        onCancel: vaga.status == 'ativa'
-                            ? () => _cancelarVaga(vaga)
-                            : null,
-                        onFinish: vaga.status == 'ativa'
-                            ? () => _finalizarVaga(vaga)
-                            : null,
-                      ),
+                        const SizedBox(height: 22),
+                        _Hero(
+                          onCreate: () =>
+                              context.go('/company/create-vacancy'),
+                        ),
+                        const SizedBox(height: 18),
+                        _Metrics(
+                          total: vagas.length,
+                          active: ativas,
+                          finished: finalizadas,
+                          cancelled: canceladas,
+                        ),
+                        const SizedBox(height: 30),
+                        _SectionHeading(
+                          eyebrow: 'GESTÃO DE VAGAS',
+                          title: 'Suas oportunidades',
+                          subtitle:
+                              'Acompanhe o status das vagas e acesse os candidatos.',
+                          trailing: FilledButton.icon(
+                            onPressed: () =>
+                                context.go('/company/create-vacancy'),
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: const Text('Nova vaga'),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        if (loading)
+                          const _Loading()
+                        else if (vagas.isEmpty)
+                          _Empty(
+                            onCreate: () =>
+                                context.go('/company/create-vacancy'),
+                          )
+                        else
+                          _VacancyGrid(
+                            vagas: vagas,
+                            updating: _updating,
+                            onCandidates: (vaga) => context.go(
+                              '/company/candidates/${vaga.id}',
+                            ),
+                            onCancel: _cancelarVaga,
+                            onFinish: _finalizarVaga,
+                          ),
+                      ],
                     ),
                   ),
-              ],
-            ),
-          );
-        },
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -190,8 +135,8 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
     final confirm = await _confirmAction(
       title: 'Finalizar vaga?',
       message:
-          'A vaga "${vaga.titulo}" será marcada como finalizada. Use esta opção quando a contratação já tiver sido concluída.',
-      confirmText: 'Finalizar',
+          'A vaga "${vaga.titulo}" será marcada como finalizada.',
+      confirmText: 'Finalizar vaga',
     );
 
     if (!confirm) return;
@@ -208,26 +153,15 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
     required String successMessage,
     required String errorMessage,
   }) async {
-    setState(() {
-      _updating = true;
-    });
+    setState(() => _updating = true);
 
     try {
       await action();
-
-      if (!mounted) return;
-
-      _showSnackBar(successMessage);
+      if (mounted) _showSnackBar(successMessage);
     } catch (_) {
-      if (!mounted) return;
-
-      _showSnackBar(errorMessage, isError: true);
+      if (mounted) _showSnackBar(errorMessage, isError: true);
     } finally {
-      if (mounted) {
-        setState(() {
-          _updating = false;
-        });
-      }
+      if (mounted) setState(() => _updating = false);
     }
   }
 
@@ -238,103 +172,202 @@ class _CompanyDashboardState extends State<CompanyDashboard> {
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Voltar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(confirmText),
-            ),
-          ],
-        );
-      },
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Voltar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(confirmText),
+          ),
+        ],
+      ),
     );
 
     return result ?? false;
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: isError ? colorScheme.error : Colors.green.shade700,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        backgroundColor:
+            isError ? Theme.of(context).colorScheme.error : Colors.green.shade700,
       ),
     );
   }
 }
 
-class _HeaderCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
+class _Header extends StatelessWidget {
+  final VoidCallback onNotifications;
+  final VoidCallback onProfile;
 
-  const _HeaderCard({required this.title, required this.subtitle});
+  const _Header({
+    required this.onNotifications,
+    required this.onProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Painel da empresa',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Publique vagas, gerencie candidatos e acompanhe contratações.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+        _ActionIcon(
+          icon: Icons.notifications_none_rounded,
+          onTap: onNotifications,
+        ),
+        const SizedBox(width: 8),
+        _ActionIcon(
+          icon: Icons.storefront_outlined,
+          onTap: onProfile,
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionIcon extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ActionIcon({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: Icon(icon, size: 21),
+      ),
+    );
+  }
+}
+
+class _Hero extends StatelessWidget {
+  final VoidCallback onCreate;
+
+  const _Hero({required this.onCreate});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.78),
+            scheme.primary,
+            scheme.primary.withValues(alpha: 0.8),
+            const Color(0xFF6670E8),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(28),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.storefront_rounded,
-              color: Colors.white,
-              size: 30,
+          Positioned(
+            right: -10,
+            bottom: -35,
+            child: Icon(
+              Icons.groups_3_rounded,
+              size: 190,
+              color: Colors.white.withValues(alpha: 0.07),
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 7,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'CONTRATE COM MAIS AGILIDADE',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.86),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Sua próxima contratação começa aqui.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  height: 1.1,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1.1,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 620),
+                child: Text(
+                  'Crie oportunidades, receba candidaturas e acompanhe todo o processo em um único lugar.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 22),
+              FilledButton.icon(
+                onPressed: onCreate,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: scheme.primary,
+                ),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Criar nova vaga'),
+              ),
+            ],
           ),
         ],
       ),
@@ -342,12 +375,60 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _Metrics extends StatelessWidget {
+  final int total;
+  final int active;
+  final int finished;
+  final int cancelled;
+
+  const _Metrics({
+    required this.total,
+    required this.active,
+    required this.finished,
+    required this.cancelled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final data = [
+      ('Publicadas', total, Icons.inventory_2_outlined),
+      ('Ativas', active, Icons.play_circle_outline_rounded),
+      ('Finalizadas', finished, Icons.check_circle_outline_rounded),
+      ('Canceladas', cancelled, Icons.cancel_outlined),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 880 ? 4 : 2;
+        final width = (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: data
+              .map(
+                (item) => SizedBox(
+                  width: width,
+                  child: _Metric(
+                    title: item.$1,
+                    value: item.$2.toString(),
+                    icon: item.$3,
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
 
-  const _StatCard({
+  const _Metric({
     required this.title,
     required this.value,
     required this.icon,
@@ -355,64 +436,44 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: colorScheme.primary),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurface.withValues(alpha: 0.62),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniInfoCard extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _MiniInfoCard({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.46),
-        borderRadius: BorderRadius.circular(16),
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
-          Icon(icon, color: colorScheme.primary, size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontWeight: FontWeight.w800),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(icon, color: scheme.primary, size: 20),
+          ),
+          const SizedBox(width: 11),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -420,14 +481,117 @@ class _MiniInfoCard extends StatelessWidget {
   }
 }
 
-class _CompanyVagaCard extends StatelessWidget {
+class _SectionHeading extends StatelessWidget {
+  final String eyebrow;
+  final String title;
+  final String subtitle;
+  final Widget trailing;
+
+  const _SectionHeading({
+    required this.eyebrow,
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eyebrow,
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        trailing,
+      ],
+    );
+  }
+}
+
+class _VacancyGrid extends StatelessWidget {
+  final List<VagaModel> vagas;
+  final bool updating;
+  final ValueChanged<VagaModel> onCandidates;
+  final ValueChanged<VagaModel> onCancel;
+  final ValueChanged<VagaModel> onFinish;
+
+  const _VacancyGrid({
+    required this.vagas,
+    required this.updating,
+    required this.onCandidates,
+    required this.onCancel,
+    required this.onFinish,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 860 ? 2 : 1;
+        final width = (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: vagas
+              .map(
+                (vaga) => SizedBox(
+                  width: width,
+                  child: _VacancyCard(
+                    vaga: vaga,
+                    updating: updating,
+                    onCandidates: () => onCandidates(vaga),
+                    onCancel:
+                        vaga.status == 'ativa' ? () => onCancel(vaga) : null,
+                    onFinish:
+                        vaga.status == 'ativa' ? () => onFinish(vaga) : null,
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _VacancyCard extends StatelessWidget {
   final VagaModel vaga;
   final bool updating;
   final VoidCallback onCandidates;
   final VoidCallback? onCancel;
   final VoidCallback? onFinish;
 
-  const _CompanyVagaCard({
+  const _VacancyCard({
     required this.vaga,
     required this.updating,
     required this.onCandidates,
@@ -437,29 +601,33 @@ class _CompanyVagaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.22)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _CategoryIcon(tipo: vaga.tipo),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.work_outline_rounded,
+                  color: scheme.primary,
+                  size: 21,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -467,58 +635,48 @@ class _CompanyVagaCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              _StatusBadge(status: vaga.status),
+              _Status(status: vaga.status),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 15),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 7,
+            runSpacing: 7,
             children: [
-              _InfoChip(icon: Icons.category_outlined, label: vaga.tipo),
-              _InfoChip(icon: Icons.location_on_outlined, label: vaga.local),
+              _Tag(icon: Icons.category_outlined, label: vaga.tipo),
+              _Tag(icon: Icons.location_on_outlined, label: vaga.local),
               if (vaga.data.isNotEmpty)
-                _InfoChip(
-                  icon: Icons.calendar_month_outlined,
-                  label: vaga.data,
-                ),
-              if (vaga.horario.isNotEmpty)
-                _InfoChip(icon: Icons.access_time_rounded, label: vaga.horario),
-              _InfoChip(
+                _Tag(icon: Icons.calendar_today_outlined, label: vaga.data),
+              _Tag(
                 icon: Icons.people_outline_rounded,
                 label: '${vaga.quantidade} vaga(s)',
               ),
             ],
           ),
           if (vaga.descricao.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 15),
             Text(
               vaga.descricao,
-              style: TextStyle(
-                height: 1.35,
-                color: colorScheme.onSurface.withValues(alpha: 0.76),
-                fontWeight: FontWeight.w600,
-              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Text(
             'R\$ ${vaga.valor}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: colorScheme.primary,
-              fontSize: 24,
+              color: scheme.primary,
+              fontSize: 20,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 15),
           if (updating)
             const LinearProgressIndicator()
           else
@@ -528,19 +686,19 @@ class _CompanyVagaCard extends StatelessWidget {
               children: [
                 OutlinedButton.icon(
                   onPressed: onCandidates,
-                  icon: const Icon(Icons.groups_rounded),
+                  icon: const Icon(Icons.groups_2_outlined, size: 18),
                   label: const Text('Candidatos'),
                 ),
                 if (onCancel != null)
-                  OutlinedButton.icon(
+                  TextButton.icon(
                     onPressed: onCancel,
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(Icons.close_rounded, size: 18),
                     label: const Text('Cancelar'),
                   ),
                 if (onFinish != null)
                   FilledButton.icon(
                     onPressed: onFinish,
-                    icon: const Icon(Icons.check_rounded),
+                    icon: const Icon(Icons.check_rounded, size: 18),
                     label: const Text('Finalizar'),
                   ),
               ],
@@ -551,77 +709,70 @@ class _CompanyVagaCard extends StatelessWidget {
   }
 }
 
-class _CategoryIcon extends StatelessWidget {
-  final String tipo;
+class _Status extends StatelessWidget {
+  final String status;
 
-  const _CategoryIcon({required this.tipo});
-
-  IconData get icon {
-    switch (tipo.toLowerCase()) {
-      case 'garçom':
-        return Icons.room_service_rounded;
-      case 'auxiliar':
-        return Icons.soup_kitchen_rounded;
-      case 'pizzaiolo':
-        return Icons.local_pizza_rounded;
-      case 'barista':
-        return Icons.coffee_rounded;
-      case 'chapeiro':
-        return Icons.outdoor_grill_rounded;
-      case 'atendente':
-        return Icons.point_of_sale_rounded;
-      default:
-        return Icons.work_rounded;
-    }
-  }
+  const _Status({required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final normalized = status.toLowerCase();
+    final color = switch (normalized) {
+      'ativa' => Colors.green,
+      'finalizada' => Colors.blue,
+      'cancelada' => Colors.red,
+      _ => Colors.orange,
+    };
 
     return Container(
-      width: 48,
-      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Icon(icon, color: colorScheme.primary),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
     );
   }
 }
 
-class _InfoChip extends StatelessWidget {
+class _Tag extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _InfoChip({required this.icon, required this.label});
+  const _Tag({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.58),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.58),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 15,
-            color: colorScheme.onSurface.withValues(alpha: 0.62),
-          ),
+          Icon(icon, size: 13, color: scheme.onSurfaceVariant),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurface.withValues(alpha: 0.72),
-              fontWeight: FontWeight.w700,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 145),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -630,62 +781,21 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
+class _Loading extends StatelessWidget {
+  const _Loading();
 
   @override
   Widget build(BuildContext context) {
-    final normalized = status.toLowerCase();
+    final scheme = Theme.of(context).colorScheme;
 
-    final color = switch (normalized) {
-      'ativa' => Colors.green,
-      'finalizada' => Colors.blue,
-      'cancelada' => Colors.red,
-      _ => Colors.orange,
-    };
-
-    final label = switch (normalized) {
-      'ativa' => 'Ativa',
-      'finalizada' => 'Finalizada',
-      'cancelada' => 'Cancelada',
-      _ => status,
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
-class _LoadingList extends StatelessWidget {
-  const _LoadingList();
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
       children: List.generate(
-        4,
-        (index) => Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          height: 178,
+        3,
+        (_) => Container(
+          height: 180,
+          margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+            color: scheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(22),
           ),
         ),
@@ -694,37 +804,57 @@ class _LoadingList extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+class _Empty extends StatelessWidget {
+  final VoidCallback onCreate;
+
+  const _Empty({required this.onCreate});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.all(34),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.22)),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         children: [
-          Icon(Icons.work_off_outlined, size: 48, color: colorScheme.primary),
-          const SizedBox(height: 12),
-          const Text(
-            'Nenhuma vaga publicada',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Crie sua primeira vaga para receber candidatos.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: colorScheme.onSurface.withValues(alpha: 0.64),
-              fontWeight: FontWeight.w600,
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
             ),
+            child: Icon(
+              Icons.add_business_outlined,
+              color: scheme.primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Publique sua primeira vaga',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'Comece criando uma oportunidade e receba candidatos pelo iFree.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: onCreate,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Criar vaga'),
           ),
         ],
       ),
