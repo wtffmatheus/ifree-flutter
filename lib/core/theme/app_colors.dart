@@ -1,44 +1,37 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // â”€â”€ Freelancer (vermelho premium) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static const Color freelancerPrimary = Color(0xFFE63946);
-  static const Color freelancerSecondary = Color(0xFFFF6B6B);
-  static const Color freelancerDark = Color(0xFFC1121F);
+  static const Color freelancerPrimary = Color(0xFFD92D4A);
+  static const Color freelancerSecondary = Color(0xFFF2556B);
+  static const Color freelancerDark = Color(0xFFA91E36);
 
-  // â”€â”€ Company (azul profissional) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static const Color companyPrimary = Color(0xFF1D3557);
-  static const Color companySecondary = Color(0xFF457B9D);
-  static const Color companyAccent = Color(0xFFA8DADC);
+  static const Color companyPrimary = Color(0xFF4454D9);
+  static const Color companySecondary = Color(0xFF6877F0);
+  static const Color companyAccent = Color(0xFFDDE2FF);
 
-  // â”€â”€ Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static const Color success = Color(0xFF06D6A0);
-  static const Color error = Color(0xFFE63946);
-  static const Color analise = Color(0xFFFF9F1C);
-  static const Color aprovado = Color(0xFF06D6A0);
-  static const Color concluido = Color(0xFF118AB2);
-  static const Color gold = Color(0xFFFFD166);
+  static const Color success = Color(0xFF18A873);
+  static const Color error = Color(0xFFD64545);
+  static const Color analise = Color(0xFFF59E0B);
+  static const Color aprovado = Color(0xFF18A873);
+  static const Color concluido = Color(0xFF3878D8);
+  static const Color gold = Color(0xFFF2B94B);
 
-  // â”€â”€ Dark backgrounds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static const Color bgDark = Color(0xFF0A0A0F);
-  static const Color bgCardDark = Color(0xFF13131A);
-  static const Color bgCard2Dark = Color(0xFF1C1C26);
-  static const Color borderDark = Color(0x12FFFFFF);
-  static const Color borderHover = Color(0x25FFFFFF);
+  static const Color bgDark = Color(0xFF0C0F14);
+  static const Color bgCardDark = Color(0xFF121720);
+  static const Color bgCard2Dark = Color(0xFF1A202B);
+  static const Color borderDark = Color(0x18FFFFFF);
+  static const Color borderHover = Color(0x30FFFFFF);
 
-  // â”€â”€ Light backgrounds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static const Color bgLight = Color(0xFFF4F4F8);
+  static const Color bgLight = Color(0xFFF5F7FA);
   static const Color bgCardLight = Color(0xFFFFFFFF);
-  static const Color bgCard2Light = Color(0xFFF0F0F5);
-  static const Color borderLight = Color(0x18000000);
+  static const Color bgCard2Light = Color(0xFFF0F3F7);
+  static const Color borderLight = Color(0x140F172A);
 
-  // â”€â”€ Texto dark â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static const Color textPrimaryDark = Color(0xFFF0F0F5);
-  static const Color textSecondaryDark = Color(0xFF8888A0);
-  static const Color textDimDark = Color(0xFF555565);
+  static const Color textPrimaryDark = Color(0xFFF7F9FC);
+  static const Color textSecondaryDark = Color(0xFFA7B0BF);
+  static const Color textDimDark = Color(0xFF6E7887);
 
-  // â”€â”€ Texto light â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static const Color textPrimary = Color(0xFF1A1A2E);
-  static const Color textSecondary = Color(0xFF6C757D);
-  static const Color textDim = Color(0xFFAAAAAA);
+  static const Color textPrimary = Color(0xFF111827);
+  static const Color textSecondary = Color(0xFF667085);
+  static const Color textDim = Color(0xFF98A2B3);
 }

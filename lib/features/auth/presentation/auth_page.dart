@@ -1,11 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../data/auth_repository.dart';
-import '../../../core/theme/app_colors.dart';
+
 import '../../../core/providers/app_providers.dart';
+import '../data/auth_repository.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   const AuthPage({super.key});
@@ -14,35 +13,27 @@ class AuthPage extends ConsumerStatefulWidget {
   ConsumerState<AuthPage> createState() => _AuthPageState();
 }
 
-class _AuthPageState extends ConsumerState<AuthPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _AuthPageState extends ConsumerState<AuthPage> {
   final _repo = AuthRepository();
 
-  // Controllers
+  final _loginFormKey = GlobalKey<FormState>();
+  final _signupFormKey = GlobalKey<FormState>();
+
   final _loginEmailCtrl = TextEditingController();
   final _loginPasswordCtrl = TextEditingController();
-  final _loginFormKey = GlobalKey<FormState>();
 
   final _signupNameCtrl = TextEditingController();
   final _signupEmailCtrl = TextEditingController();
   final _signupPasswordCtrl = TextEditingController();
-  final _signupFormKey = GlobalKey<FormState>();
-  String _selectedRole = 'freelancer';
 
+  bool _isLogin = true;
   bool _isLoading = false;
   bool _loginObscure = true;
   bool _signupObscure = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
+  String _selectedRole = 'freelancer';
 
   @override
   void dispose() {
-    _tabController.dispose();
     _loginEmailCtrl.dispose();
     _loginPasswordCtrl.dispose();
     _signupNameCtrl.dispose();
@@ -51,57 +42,59 @@ class _AuthPageState extends ConsumerState<AuthPage>
     super.dispose();
   }
 
-  // â”â‚¬â”â‚¬ TraduÃƒÂ§ÃƒÂ£o de erros Firebase â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-  String _translateError(dynamic e) {
-    if (e is FirebaseAuthException) {
-      switch (e.code) {
+  String? _emailValidator(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) return 'Informe seu e-mail.';
+    if (!email.contains('@') || !email.contains('.')) return 'Digite um e-mail válido.';
+    return null;
+  }
+
+  String? _passwordValidator(String? value) {
+    final password = value ?? '';
+    if (password.isEmpty) return 'Informe sua senha.';
+    if (password.length < 6) return 'Use pelo menos 6 caracteres.';
+    return null;
+  }
+
+  String _translateError(dynamic error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
         case 'email-already-in-use':
-          return 'Este e-mail jÃƒÂ¡ estÃƒÂ¡ cadastrado. Tente fazer login.';
+          return 'Este e-mail já está cadastrado.';
         case 'invalid-email':
-          return 'Formato de e-mail invÃƒÂ¡lido.';
+          return 'O e-mail informado é inválido.';
         case 'weak-password':
-          return 'Senha muito fraca. Use mÃƒÂ­nimo 6 caracteres.';
+          return 'A senha precisa ser mais forte.';
         case 'user-not-found':
-          return 'E-mail não encontrado. Crie uma conta.';
         case 'wrong-password':
         case 'invalid-credential':
           return 'E-mail ou senha incorretos.';
-        case 'operation-not-allowed':
-          return 'Login com e-mail desabilitado no Firebase Console.';
         case 'network-request-failed':
-          return 'Sem conexÃƒÂ£o. Verifique sua internet.';
+          return 'Sem conexão. Verifique sua internet.';
         case 'too-many-requests':
-          return 'Muitas tentativas. Aguarde e tente novamente.';
+          return 'Muitas tentativas. Tente novamente em instantes.';
         case 'user-disabled':
-          return 'Conta desativada. Entre em contato.';
-        case 'popup-closed-by-user':
-        case 'cancelled-popup-request':
-          return 'Login cancelado. Tente novamente.';
+          return 'Esta conta está desativada.';
         default:
-          return 'Erro [${e.code}]: ${e.message ?? "Erro desconhecido"}';
+          return error.message ?? 'Não foi possível continuar.';
       }
     }
-    final msg = e.toString();
-    if (msg.contains('cancelled')) return 'Login cancelado.';
-    return 'Erro inesperado. Tente novamente.';
+
+    return 'Não foi possível concluir a operação.';
   }
 
-  void _showError(String msg) {
+  void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Text(msg)),
+            const Icon(Icons.error_outline_rounded, color: Colors.white),
+            const SizedBox(width: 10),
+            Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: AppColors.error,
+        backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -109,37 +102,23 @@ class _AuthPageState extends ConsumerState<AuthPage>
   Future<void> _afterLogin(String uid) async {
     final role = await _repo.getUserRole(uid);
     if (!mounted) return;
+
     ref.read(userRoleProvider.notifier).set(role ?? 'freelancer');
-    if (role == 'company') {
-      context.go('/company');
-    } else {
-      context.go('/freelancer');
-    }
+    context.go(role == 'company' ? '/company' : '/freelancer');
   }
 
   Future<void> _login() async {
     if (!_loginFormKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
+
     try {
-      final cred = await _repo.signInWithEmail(
+      final credential = await _repo.signInWithEmail(
         _loginEmailCtrl.text,
         _loginPasswordCtrl.text,
       );
-      await _afterLogin(cred.user!.uid);
-    } catch (e) {
-      _showError(_translateError(e));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loginWithGoogle() async {
-    setState(() => _isLoading = true);
-    try {
-      final cred = await _repo.signInWithGoogle();
-      await _afterLogin(cred.user!.uid);
-    } catch (e) {
-      _showError(_translateError(e));
+      await _afterLogin(credential.user!.uid);
+    } catch (error) {
+      _showError(_translateError(error));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -148,16 +127,32 @@ class _AuthPageState extends ConsumerState<AuthPage>
   Future<void> _signup() async {
     if (!_signupFormKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
+
     try {
-      final cred = await _repo.signUp(
+      final credential = await _repo.signUp(
         name: _signupNameCtrl.text,
         email: _signupEmailCtrl.text,
         password: _signupPasswordCtrl.text,
         role: _selectedRole,
       );
-      await _afterLogin(cred.user!.uid);
-    } catch (e) {
-      _showError(_translateError(e));
+      await _afterLogin(credential.user!.uid);
+    } catch (error) {
+      _showError(_translateError(error));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final credential = await _repo.signInWithGoogle(
+        defaultRole: _selectedRole,
+      );
+      await _afterLogin(credential.user!.uid);
+    } catch (error) {
+      _showError(_translateError(error));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -165,522 +160,343 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // â”â‚¬â”â‚¬ Fundo decorativo â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-          Positioned(
-            top: -80,
-            left: -60,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.freelancerPrimary.withValues(alpha: 0.08),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 960;
+
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [
+                        const Color(0xFF0B0D12),
+                        const Color(0xFF11141B),
+                      ]
+                    : [
+                        const Color(0xFFF5F7FB),
+                        const Color(0xFFEEF2F7),
+                      ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-          ),
-          Positioned(
-            bottom: 60,
-            right: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.gold.withValues(alpha: 0.06),
-              ),
-            ),
-          ),
-
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: size.height - MediaQuery.of(context).padding.top,
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 40),
-
-                    // â”â‚¬â”â‚¬ Logo â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-                    Column(
+            child: SafeArea(
+              child: isDesktop
+                  ? Row(
                       children: [
-                        ShaderMask(
-                          shaderCallback: (b) => const LinearGradient(
-                            colors: [
-                              AppColors.freelancerPrimary,
-                              AppColors.freelancerSecondary,
-                            ],
-                          ).createShader(b),
-                          child: const Text(
-                            'iFree',
-                            style: TextStyle(
-                              fontSize: 52,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              height: 1,
-                            ),
-                          ),
+                        Expanded(
+                          flex: 11,
+                          child: _BrandPanel(colorScheme: colorScheme),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Conectando freelancers a restaurantes',
-                          style: TextStyle(
-                            color: isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondary,
-                            fontSize: 13,
+                        Expanded(
+                          flex: 10,
+                          child: Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(42),
+                              child: _AuthCard(
+                                isLogin: _isLogin,
+                                isLoading: _isLoading,
+                                selectedRole: _selectedRole,
+                                loginEmailCtrl: _loginEmailCtrl,
+                                loginPasswordCtrl: _loginPasswordCtrl,
+                                signupNameCtrl: _signupNameCtrl,
+                                signupEmailCtrl: _signupEmailCtrl,
+                                signupPasswordCtrl: _signupPasswordCtrl,
+                                loginFormKey: _loginFormKey,
+                                signupFormKey: _signupFormKey,
+                                loginObscure: _loginObscure,
+                                signupObscure: _signupObscure,
+                                onModeChanged: (value) =>
+                                    setState(() => _isLogin = value),
+                                onRoleChanged: (value) =>
+                                    setState(() => _selectedRole = value),
+                                onLoginObscureChanged: () => setState(
+                                  () => _loginObscure = !_loginObscure,
+                                ),
+                                onSignupObscureChanged: () => setState(
+                                  () => _signupObscure = !_signupObscure,
+                                ),
+                                onLogin: _login,
+                                onSignup: _signup,
+                                onGoogle: _loginWithGoogle,
+                                emailValidator: _emailValidator,
+                                passwordValidator: _passwordValidator,
+                              ),
+                            ),
                           ),
                         ),
                       ],
-                    ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.2),
-
-                    const SizedBox(height: 36),
-
-                    // â”â‚¬â”â‚¬ Card principal â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.bgCardDark
-                            : AppColors.bgCardLight,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.borderDark
-                              : AppColors.borderLight,
-                          width: 0.8,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(
-                              alpha: isDark ? 0.4 : 0.08,
-                            ),
-                            blurRadius: 40,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
-                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                       child: Column(
                         children: [
-                          // â”â‚¬â”â‚¬ Tabs â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(28),
-                              topRight: Radius.circular(28),
+                          const _MobileBrand(),
+                          const SizedBox(height: 28),
+                          _AuthCard(
+                            isLogin: _isLogin,
+                            isLoading: _isLoading,
+                            selectedRole: _selectedRole,
+                            loginEmailCtrl: _loginEmailCtrl,
+                            loginPasswordCtrl: _loginPasswordCtrl,
+                            signupNameCtrl: _signupNameCtrl,
+                            signupEmailCtrl: _signupEmailCtrl,
+                            signupPasswordCtrl: _signupPasswordCtrl,
+                            loginFormKey: _loginFormKey,
+                            signupFormKey: _signupFormKey,
+                            loginObscure: _loginObscure,
+                            signupObscure: _signupObscure,
+                            onModeChanged: (value) =>
+                                setState(() => _isLogin = value),
+                            onRoleChanged: (value) =>
+                                setState(() => _selectedRole = value),
+                            onLoginObscureChanged: () => setState(
+                              () => _loginObscure = !_loginObscure,
                             ),
-                            child: TabBar(
-                              controller: _tabController,
-                              dividerColor: Colors.transparent,
-                              indicator: BoxDecoration(
-                                color: AppColors.freelancerPrimary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                border: const Border(
-                                  bottom: BorderSide(
-                                    color: AppColors.freelancerPrimary,
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                              tabs: const [
-                                Tab(text: 'Entrar'),
-                                Tab(text: 'Cadastrar'),
-                              ],
+                            onSignupObscureChanged: () => setState(
+                              () => _signupObscure = !_signupObscure,
                             ),
-                          ),
-
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: SizedBox(
-                              height: _tabController.index == 0 ? 320 : 480,
-                              child: TabBarView(
-                                controller: _tabController,
-                                children: [
-                                  _LoginForm(
-                                    emailCtrl: _loginEmailCtrl,
-                                    passCtrl: _loginPasswordCtrl,
-                                    formKey: _loginFormKey,
-                                    obscure: _loginObscure,
-                                    onToggleObscure: () => setState(
-                                      () => _loginObscure = !_loginObscure,
-                                    ),
-                                    onLogin: _login,
-                                    isLoading: _isLoading,
-                                  ),
-                                  _SignupForm(
-                                    nameCtrl: _signupNameCtrl,
-                                    emailCtrl: _signupEmailCtrl,
-                                    passCtrl: _signupPasswordCtrl,
-                                    formKey: _signupFormKey,
-                                    obscure: _signupObscure,
-                                    onToggleObscure: () => setState(
-                                      () => _signupObscure = !_signupObscure,
-                                    ),
-                                    selectedRole: _selectedRole,
-                                    onRoleChanged: (r) =>
-                                        setState(() => _selectedRole = r),
-                                    onSignup: _signup,
-                                    isLoading: _isLoading,
-                                  ),
-                                ],
-                              ),
-                            ),
+                            onLogin: _login,
+                            onSignup: _signup,
+                            onGoogle: _loginWithGoogle,
+                            emailValidator: _emailValidator,
+                            passwordValidator: _passwordValidator,
                           ),
                         ],
                       ),
-                    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-
-                    const SizedBox(height: 20),
-
-                    // â”â‚¬â”â‚¬ Divider â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            color: isDark
-                                ? AppColors.borderDark
-                                : AppColors.borderLight,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'ou',
-                            style: TextStyle(
-                              color: isDark
-                                  ? AppColors.textDimDark
-                                  : AppColors.textDim,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: isDark
-                                ? AppColors.borderDark
-                                : AppColors.borderLight,
-                          ),
-                        ),
-                      ],
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // â”â‚¬â”â‚¬ Google Button â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-                    // CORREÃƒâ€¡ÃƒÆ’O: botÃƒÂ£o Google usa signInWithGoogle() do repo
-                    // O erro "clientId != null" acontecia no Flutter Web por falta
-                    // do <meta name="google-signin-client_id"> no index.html.
-                    // SOLUÃƒâ€¡ÃƒÆ’O: adicionar no web/index.html:
-                    // <meta name="google-signin-client_id" content="SEU_CLIENT_ID.apps.googleusercontent.com">
-                    OutlinedButton.icon(
-                      onPressed: _isLoading ? null : _loginWithGoogle,
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: isDark
-                              ? AppColors.borderDark
-                              : AppColors.borderLight,
-                        ),
-                        foregroundColor: isDark
-                            ? AppColors.textPrimaryDark
-                            : AppColors.textPrimary,
-                        minimumSize: const Size(double.infinity, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      icon: _GoogleIcon(),
-                      label: const Text(
-                        'Continuar com Google',
-                        style: TextStyle(
-                          fontFamily: 'Sora',
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: 400.ms),
-
-                    const SizedBox(height: 12),
-
-                    // â”â‚¬â”â‚¬ Esqueci senha â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-                    TextButton(
-                      onPressed: () => context.go('/forgot-password'),
-                      child: const Text('Esqueci minha senha'),
-                    ).animate().fadeIn(delay: 500.ms),
-
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
 
-// â”â‚¬â”â‚¬ Google Icon (SVG inline sem dependÃƒªncia) â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-class _GoogleIcon extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 20,
-      height: 20,
-      child: CustomPaint(painter: _GooglePainter()),
-    );
-  }
-}
+class _BrandPanel extends StatelessWidget {
+  final ColorScheme colorScheme;
 
-class _GooglePainter extends CustomPainter {
-  const _GooglePainter();
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final scale = size.width / 20;
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      -1.5,
-      3.0,
-      true,
-      paint,
-    );
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      1.5,
-      1.5,
-      true,
-      paint,
-    );
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      3.0,
-      1.6,
-      true,
-      paint,
-    );
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      -3.14,
-      1.7,
-      true,
-      paint,
-    );
-    paint.color = Colors.white;
-    canvas.drawCircle(
-      Offset(size.width / 2, size.height / 2),
-      size.width * 0.32,
-      paint,
-    );
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawRect(
-      Rect.fromLTWH(
-        size.width * 0.5,
-        size.height * 0.42,
-        size.width * 0.48 * scale,
-        size.height * 0.16,
-      ),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-// â”â‚¬â”â‚¬ Login Form â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-class _LoginForm extends StatelessWidget {
-  final TextEditingController emailCtrl;
-  final TextEditingController passCtrl;
-  final GlobalKey<FormState> formKey;
-  final bool obscure;
-  final VoidCallback onToggleObscure;
-  final VoidCallback onLogin;
-  final bool isLoading;
-
-  const _LoginForm({
-    required this.emailCtrl,
-    required this.passCtrl,
-    required this.formKey,
-    required this.obscure,
-    required this.onToggleObscure,
-    required this.onLogin,
-    required this.isLoading,
-  });
+  const _BrandPanel({required this.colorScheme});
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
-        children: [
-          TextFormField(
-            controller: emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'E-mail',
-              prefixIcon: Icon(Icons.email_outlined),
+    return Padding(
+      padding: const EdgeInsets.all(28),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(34),
+        child: Container(
+          padding: const EdgeInsets.all(48),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                colorScheme.primary,
+                colorScheme.primary.withValues(alpha: 0.72),
+                const Color(0xFF7C3AED),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            validator: (v) =>
-                v != null && v.contains('@') ? null : 'E-mail invÃƒÂ¡lido',
           ),
-          const SizedBox(height: 14),
-          TextFormField(
-            controller: passCtrl,
-            obscureText: obscure,
-            decoration: InputDecoration(
-              labelText: 'Senha',
-              prefixIcon: const Icon(Icons.lock_outline_rounded),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  obscure
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                ),
-                onPressed: onToggleObscure,
+          child: Stack(
+            children: [
+              Positioned(
+                right: -90,
+                top: -100,
+                child: _GlowCircle(size: 280),
               ),
-            ),
-            validator: (v) =>
-                v != null && v.length >= 6 ? null : 'MÃƒÂ­nimo 6 caracteres',
-            onFieldSubmitted: (_) => onLogin(),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: isLoading ? null : onLogin,
-            child: isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
+              Positioned(
+                left: -80,
+                bottom: -110,
+                child: _GlowCircle(size: 240),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _BrandMark(light: true),
+                  const Spacer(),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: const Text(
+                      'Trabalho flexível. Contratações sem complicação.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 44,
+                        height: 1.08,
+                        letterSpacing: -1.8,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  )
-                : const Text('Entrar'),
+                  ),
+                  const SizedBox(height: 18),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Text(
+                      'O iFree aproxima profissionais e estabelecimentos para preencher oportunidades com mais rapidez, clareza e confiança.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.78),
+                        fontSize: 16,
+                        height: 1.6,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 34),
+                  const Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      _BenefitPill(
+                        icon: Icons.bolt_rounded,
+                        label: 'Oportunidades em tempo real',
+                      ),
+                      _BenefitPill(
+                        icon: Icons.location_on_rounded,
+                        label: 'Vagas perto de você',
+                      ),
+                      _BenefitPill(
+                        icon: Icons.verified_user_rounded,
+                        label: 'Perfis organizados',
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Feito para quem precisa contratar e para quem quer trabalhar.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.62),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// â”â‚¬â”â‚¬ Signup Form â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-class _SignupForm extends StatelessWidget {
-  final TextEditingController nameCtrl;
-  final TextEditingController emailCtrl;
-  final TextEditingController passCtrl;
-  final GlobalKey<FormState> formKey;
-  final bool obscure;
-  final VoidCallback onToggleObscure;
-  final String selectedRole;
-  final ValueChanged<String> onRoleChanged;
-  final VoidCallback onSignup;
-  final bool isLoading;
+class _GlowCircle extends StatelessWidget {
+  final double size;
 
-  const _SignupForm({
-    required this.nameCtrl,
-    required this.emailCtrl,
-    required this.passCtrl,
-    required this.formKey,
-    required this.obscure,
-    required this.onToggleObscure,
-    required this.selectedRole,
-    required this.onRoleChanged,
-    required this.onSignup,
-    required this.isLoading,
-  });
+  const _GlowCircle({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: 0.08),
+      ),
+    );
+  }
+}
+
+class _MobileBrand extends StatelessWidget {
+  const _MobileBrand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const _BrandMark(),
+        const SizedBox(height: 14),
+        Text(
+          'Conectando oportunidades a quem faz acontecer.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BrandMark extends StatelessWidget {
+  final bool light;
+
+  const _BrandMark({this.light = false});
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    return Form(
-      key: formKey,
-      child: Column(
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: light ? Colors.white.withValues(alpha: 0.14) : primary,
+            borderRadius: BorderRadius.circular(16),
+            border: light
+                ? Border.all(color: Colors.white.withValues(alpha: 0.16))
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: const Text(
+            'iF',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.8,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'iFree',
+          style: TextStyle(
+            color: light ? Colors.white : null,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -1,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BenefitPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _BenefitPill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.11),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          TextFormField(
-            controller: nameCtrl,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Nome completo',
-              prefixIcon: Icon(Icons.person_outline_rounded),
+          Icon(icon, color: Colors.white, size: 17),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
-            validator: (v) =>
-                v != null && v.trim().length >= 2 ? null : 'Nome muito curto',
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'E-mail',
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-            validator: (v) =>
-                v != null && v.contains('@') ? null : 'E-mail invÃƒÂ¡lido',
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: passCtrl,
-            obscureText: obscure,
-            decoration: InputDecoration(
-              labelText: 'Senha',
-              prefixIcon: const Icon(Icons.lock_outline_rounded),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  obscure
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                ),
-                onPressed: onToggleObscure,
-              ),
-            ),
-            validator: (v) =>
-                v != null && v.length >= 6 ? null : 'MÃƒÂ­nimo 6 caracteres',
-          ),
-          const SizedBox(height: 14),
-          // â”â‚¬â”â‚¬ SeleÃƒÂ§ÃƒÂ£o de papel â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
-          Row(
-            children: [
-              _RoleTile(
-                label: 'Ã°Å¸Â§‘ââ‚¬ÂÃ°Å¸ÂÂ³  Freelancer',
-                subtitle: 'Busco trabalho',
-                value: 'freelancer',
-                group: selectedRole,
-                primary: primary,
-                onTap: () => onRoleChanged('freelancer'),
-              ),
-              const SizedBox(width: 10),
-              _RoleTile(
-                label: 'Ã°Å¸Âª  Restaurante',
-                subtitle: 'Contrato talentos',
-                value: 'company',
-                group: selectedRole,
-                primary: primary,
-                onTap: () => onRoleChanged('company'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: isLoading ? null : onSignup,
-            child: isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Criar conta'),
           ),
         ],
       ),
@@ -688,66 +504,479 @@ class _SignupForm extends StatelessWidget {
   }
 }
 
-class _RoleTile extends StatelessWidget {
+class _AuthCard extends StatelessWidget {
+  final bool isLogin;
+  final bool isLoading;
+  final String selectedRole;
+
+  final TextEditingController loginEmailCtrl;
+  final TextEditingController loginPasswordCtrl;
+  final TextEditingController signupNameCtrl;
+  final TextEditingController signupEmailCtrl;
+  final TextEditingController signupPasswordCtrl;
+
+  final GlobalKey<FormState> loginFormKey;
+  final GlobalKey<FormState> signupFormKey;
+
+  final bool loginObscure;
+  final bool signupObscure;
+
+  final ValueChanged<bool> onModeChanged;
+  final ValueChanged<String> onRoleChanged;
+  final VoidCallback onLoginObscureChanged;
+  final VoidCallback onSignupObscureChanged;
+  final VoidCallback onLogin;
+  final VoidCallback onSignup;
+  final VoidCallback onGoogle;
+  final String? Function(String?) emailValidator;
+  final String? Function(String?) passwordValidator;
+
+  const _AuthCard({
+    required this.isLogin,
+    required this.isLoading,
+    required this.selectedRole,
+    required this.loginEmailCtrl,
+    required this.loginPasswordCtrl,
+    required this.signupNameCtrl,
+    required this.signupEmailCtrl,
+    required this.signupPasswordCtrl,
+    required this.loginFormKey,
+    required this.signupFormKey,
+    required this.loginObscure,
+    required this.signupObscure,
+    required this.onModeChanged,
+    required this.onRoleChanged,
+    required this.onLoginObscureChanged,
+    required this.onSignupObscureChanged,
+    required this.onLogin,
+    required this.onSignup,
+    required this.onGoogle,
+    required this.emailValidator,
+    required this.passwordValidator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 500),
+      child: Container(
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.07),
+              blurRadius: 34,
+              offset: const Offset(0, 16),
+            ),
+          ],
+        ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          child: Column(
+            key: ValueKey(isLogin),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isLogin ? 'Bem-vindo de volta' : 'Crie sua conta',
+                style: const TextStyle(
+                  fontSize: 28,
+                  height: 1.15,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isLogin
+                    ? 'Entre para acompanhar suas oportunidades e atividades.'
+                    : 'Escolha como você vai usar o iFree e comece agora.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              _ModeSelector(
+                isLogin: isLogin,
+                onChanged: onModeChanged,
+              ),
+              const SizedBox(height: 24),
+              if (isLogin)
+                Form(
+                  key: loginFormKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: loginEmailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validator: emailValidator,
+                        decoration: const InputDecoration(
+                          labelText: 'E-mail',
+                          hintText: 'voce@email.com',
+                          prefixIcon: Icon(Icons.alternate_email_rounded),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: loginPasswordCtrl,
+                        obscureText: loginObscure,
+                        textInputAction: TextInputAction.done,
+                        validator: passwordValidator,
+                        onFieldSubmitted: (_) => onLogin(),
+                        decoration: InputDecoration(
+                          labelText: 'Senha',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
+                          suffixIcon: IconButton(
+                            onPressed: onLoginObscureChanged,
+                            icon: Icon(
+                              loginObscure
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => context.go('/forgot-password'),
+                          child: const Text('Esqueci minha senha'),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Form(
+                  key: signupFormKey,
+                  child: Column(
+                    children: [
+                      _RoleSelector(
+                        selectedRole: selectedRole,
+                        onChanged: onRoleChanged,
+                      ),
+                      const SizedBox(height: 18),
+                      TextFormField(
+                        controller: signupNameCtrl,
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if ((value?.trim().length ?? 0) < 2) {
+                            return 'Informe seu nome.';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Nome',
+                          prefixIcon: Icon(Icons.person_outline_rounded),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: signupEmailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validator: emailValidator,
+                        decoration: const InputDecoration(
+                          labelText: 'E-mail',
+                          prefixIcon: Icon(Icons.alternate_email_rounded),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: signupPasswordCtrl,
+                        obscureText: signupObscure,
+                        textInputAction: TextInputAction.done,
+                        validator: passwordValidator,
+                        onFieldSubmitted: (_) => onSignup(),
+                        decoration: InputDecoration(
+                          labelText: 'Senha',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
+                          suffixIcon: IconButton(
+                            onPressed: onSignupObscureChanged,
+                            icon: Icon(
+                              signupObscure
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: isLoading ? null : (isLogin ? onLogin : onSignup),
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          isLogin
+                              ? Icons.arrow_forward_rounded
+                              : Icons.person_add_alt_1_rounded,
+                        ),
+                  label: Text(isLogin ? 'Entrar no iFree' : 'Criar minha conta'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: colorScheme.outlineVariant)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'ou continue com',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  Expanded(child: Divider(color: colorScheme.outlineVariant)),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isLoading ? null : onGoogle,
+                  icon: Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Text(
+                      'G',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  label: const Text('Google'),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Center(
+                child: Text(
+                  'Ao continuar, você concorda com os termos de uso e política de privacidade.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeSelector extends StatelessWidget {
+  final bool isLogin;
+  final ValueChanged<bool> onChanged;
+
+  const _ModeSelector({required this.isLogin, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ModeButton(
+              label: 'Entrar',
+              selected: isLogin,
+              onTap: () => onChanged(true),
+            ),
+          ),
+          Expanded(
+            child: _ModeButton(
+              label: 'Cadastrar',
+              selected: !isLogin,
+              onTap: () => onChanged(false),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeButton extends StatelessWidget {
   final String label;
-  final String subtitle;
-  final String value;
-  final String group;
-  final Color primary;
+  final bool selected;
   final VoidCallback onTap;
 
-  const _RoleTile({
+  const _ModeButton({
     required this.label,
-    required this.subtitle,
-    required this.value,
-    required this.group,
-    required this.primary,
+    required this.selected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final selected = value == group;
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
+          color: selected ? colorScheme.surface : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                  ),
+                ]
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleSelector extends StatelessWidget {
+  final String selectedRole;
+  final ValueChanged<String> onChanged;
+
+  const _RoleSelector({
+    required this.selectedRole,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _RoleCard(
+            selected: selectedRole == 'freelancer',
+            icon: Icons.badge_outlined,
+            title: 'Quero trabalhar',
+            subtitle: 'Encontrar vagas e diárias',
+            onTap: () => onChanged('freelancer'),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _RoleCard(
+            selected: selectedRole == 'company',
+            icon: Icons.storefront_outlined,
+            title: 'Quero contratar',
+            subtitle: 'Publicar vagas e escolher pessoas',
+            onTap: () => onChanged('company'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RoleCard extends StatelessWidget {
+  final bool selected;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _RoleCard({
+    required this.selected,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.08)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
             color: selected
-                ? primary.withValues(alpha: 0.12)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selected ? primary : Colors.grey.withValues(alpha: 0.2),
-              width: selected ? 1.5 : 0.8,
+                ? colorScheme.primary
+                : colorScheme.outlineVariant.withValues(alpha: 0.65),
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              icon,
+              color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? primary : null,
-                  fontFamily: 'Sora',
-                ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
               ),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: selected
-                      ? primary.withValues(alpha: 0.7)
-                      : Colors.grey,
-                  fontFamily: 'Sora',
-                ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              maxLines: 2,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                height: 1.35,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
