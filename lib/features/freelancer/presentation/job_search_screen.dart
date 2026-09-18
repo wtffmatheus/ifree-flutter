@@ -303,28 +303,6 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
     final orderedByDistance = _sortByDistance && _userLocation != null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Buscar vagas'),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: _loadingLocation ? null : _loadUserLocation,
-            icon: _loadingLocation
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.my_location_rounded),
-            tooltip: 'Atualizar localização',
-          ),
-          IconButton(
-            onPressed: _loadAll,
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Atualizar',
-          ),
-        ],
-      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadAll,
@@ -332,78 +310,276 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _HeaderCard(
-                      total: _vagas.length,
-                      orderedByDistance: orderedByDistance,
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1220),
+                      child: _SearchTopBar(
+                        loadingLocation: _loadingLocation,
+                        onLocation: _loadUserLocation,
+                        onRefresh: _loadAll,
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _LocationOrderCard(
-                      loadingLocation: _loadingLocation,
-                      hasLocation: _userLocation != null,
-                      sortByDistance: _sortByDistance,
-                      onToggle: (value) {
-                        setState(() {
-                          _sortByDistance = value;
-                        });
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+                sliver: SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1220),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _HeaderCard(
+                            total: _vagas.length,
+                            orderedByDistance: orderedByDistance,
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                _SearchBox(controller: _searchController),
+                                const SizedBox(height: 14),
+                                _LocationOrderCard(
+                                  loadingLocation: _loadingLocation,
+                                  hasLocation: _userLocation != null,
+                                  sortByDistance: _sortByDistance,
+                                  onToggle: (value) {
+                                    setState(() {
+                                      _sortByDistance = value;
+                                    });
 
-                        if (value && _userLocation == null) {
-                          _loadUserLocation();
-                        }
-                      },
-                      onUpdateLocation: _loadUserLocation,
+                                    if (value && _userLocation == null) {
+                                      _loadUserLocation();
+                                    }
+                                  },
+                                  onUpdateLocation: _loadUserLocation,
+                                ),
+                                const SizedBox(height: 14),
+                                _FilterChips(
+                                  filters: _filters,
+                                  selectedFilter: _selectedFilter,
+                                  onSelected: (filter) {
+                                    setState(() {
+                                      _selectedFilter = filter;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Oportunidades disponíveis',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: -0.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      filteredVagas.length == 1
+                                          ? '1 vaga encontrada'
+                                          : '${filteredVagas.length} vagas encontradas',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (orderedByDistance)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 7,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.near_me_rounded,
+                                        size: 14,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Mais próximas primeiro',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _SearchBox(controller: _searchController),
-                    const SizedBox(height: 14),
-                    _FilterChips(
-                      filters: _filters,
-                      selectedFilter: _selectedFilter,
-                      onSelected: (filter) {
-                        setState(() {
-                          _selectedFilter = filter;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 18),
-                  ]),
+                  ),
                 ),
               ),
               if (_loading)
-                const SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverToBoxAdapter(child: _LoadingList()),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1220),
+                        child: const _LoadingList(),
+                      ),
+                    ),
+                  ),
                 )
               else if (filteredVagas.isEmpty)
-                const SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverToBoxAdapter(child: _EmptyState()),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1220),
+                        child: const _EmptyState(),
+                      ),
+                    ),
+                  ),
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: SliverList.separated(
-                    itemCount: filteredVagas.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 14),
-                    itemBuilder: (context, index) {
-                      final vaga = filteredVagas[index];
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 28),
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1220),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final columns =
+                                constraints.maxWidth >= 880 ? 2 : 1;
+                            final width =
+                                (constraints.maxWidth - ((columns - 1) * 12)) /
+                                    columns;
 
-                      return _VagaCard(
-                        vaga: vaga,
-                        distanceKm: _distanceFor(vaga),
-                        loading: _candidatando,
-                        onVerDetalhes: () => _openVagaDetails(vaga),
-                        onCandidatar: () => _candidatar(vaga),
-                      );
-                    },
+                            return Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: filteredVagas
+                                  .map(
+                                    (vaga) => SizedBox(
+                                      width: width,
+                                      child: _VagaCard(
+                                        vaga: vaga,
+                                        distanceKm: _distanceFor(vaga),
+                                        loading: _candidatando,
+                                        onVerDetalhes: () =>
+                                            _openVagaDetails(vaga),
+                                        onCandidatar: () => _candidatar(vaga),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SearchTopBar extends StatelessWidget {
+  final bool loadingLocation;
+  final VoidCallback onLocation;
+  final VoidCallback onRefresh;
+
+  const _SearchTopBar({
+    required this.loadingLocation,
+    required this.onLocation,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Buscar vagas',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Descubra oportunidades que combinam com você.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+        IconButton.filledTonal(
+          onPressed: loadingLocation ? null : onLocation,
+          tooltip: 'Atualizar localização',
+          icon: loadingLocation
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.my_location_rounded),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          onPressed: onRefresh,
+          tooltip: 'Atualizar vagas',
+          icon: const Icon(Icons.refresh_rounded),
+          style: IconButton.styleFrom(
+            backgroundColor: scheme.surface,
+            side: BorderSide(color: scheme.outlineVariant),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -416,62 +592,81 @@ class _HeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.78),
+            scheme.primary,
+            scheme.primary.withValues(alpha: 0.78),
+            const Color(0xFF7C3AED),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(28),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.work_rounded,
-              color: Colors.white,
-              size: 28,
+          Positioned(
+            right: -18,
+            bottom: -45,
+            child: Icon(
+              Icons.travel_explore_rounded,
+              size: 160,
+              color: Colors.white.withValues(alpha: 0.07),
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Encontre sua próxima diária',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'ENCONTRE O PRÓXIMO JOB',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  orderedByDistance
-                      ? '$total vagas ordenadas por proximidade'
-                      : total == 1
-                      ? '1 vaga ativa disponível'
-                      : '$total vagas ativas disponíveis',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.86),
-                    fontSize: 13,
-                  ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Boas oportunidades, sem perder tempo.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 27,
+                  height: 1.12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.9,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                orderedByDistance
+                    ? '$total vagas ordenadas por proximidade'
+                    : total == 1
+                        ? '1 oportunidade disponível agora'
+                        : '$total oportunidades disponíveis agora',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ],
       ),
